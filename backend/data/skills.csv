@@ -1,0 +1,101 @@
+name,alias,description
+Python,py,General-purpose programming language
+JavaScript,JS,Scripting language of the web
+TypeScript,TS,Typed superset of JavaScript
+Java,,Object-oriented language for the JVM
+C#,CSharp,Object-oriented language for .NET
+C++,CPP,Systems programming language with abstractions
+C,,Low-level systems programming language
+Go,Golang,Compiled language for concurrent services
+Rust,,Memory-safe systems programming language
+Kotlin,,Modern JVM language and Android standard
+Swift,,Language for Apple platforms
+PHP,,Server-side scripting language
+Ruby,,Dynamic language known from Rails
+Scala,,Functional and object-oriented JVM language
+Bash,Shell,Unix shell scripting
+PowerShell,pwsh,Cross-platform shell and scripting language
+SQL,,Query language for relational databases
+Dart,,Language behind Flutter
+Angular,,Frontend framework by Google
+React,,UI library for component-based frontends
+Vue.js,Vue,Progressive frontend framework
+Svelte,,Compiler-based UI framework
+SvelteKit,,Full-stack framework built on Svelte
+Next.js,Next,React framework with server rendering
+Nuxt,,Vue framework with server rendering
+HTML,,Markup language of the web
+CSS,,Styling language of the web
+Sass,SCSS,CSS preprocessor
+Tailwind CSS,Tailwind,Utility-first CSS framework
+RxJS,,Reactive programming with observables
+NgRx,,State management for Angular
+Redux,,State management for JavaScript apps
+Webpack,,Module bundler for web applications
+Vite,,Fast frontend build tool and dev server
+Storybook,,Component development and documentation
+Web Accessibility,a11y,Building accessible interfaces per WCAG
+Progressive Web Apps,PWA,Installable offline-capable web apps
+Node.js,Node,JavaScript runtime for servers
+Express,,Minimal web framework for Node.js
+NestJS,Nest,Structured backend framework for Node.js
+FastAPI,,Async Python web framework
+Django,,Batteries-included Python web framework
+Flask,,Lightweight Python web framework
+Spring Boot,Spring,Java framework for production services
+.NET,dotnet,Microsoft application platform
+ASP.NET Core,,Web framework for .NET
+GraphQL,GQL,Query language for APIs
+REST API Design,REST,Designing resource-oriented HTTP APIs
+gRPC,,High-performance RPC framework
+WebSockets,,Bidirectional real-time communication
+SQLAlchemy,,Python SQL toolkit and ORM
+Pydantic,,Data validation with Python type hints
+PostgreSQL,Postgres,Open-source relational database
+MySQL,,Relational database
+SQLite,,Embedded relational database
+MongoDB,Mongo,Document-oriented NoSQL database
+Redis,,In-memory data store and cache
+Elasticsearch,ES,Search and analytics engine
+Apache Kafka,Kafka,Distributed event streaming platform
+RabbitMQ,,Message broker
+Microsoft SQL Server,MSSQL,Relational database by Microsoft
+Docker,,Container platform
+Kubernetes,K8s,Container orchestration
+Helm,,Package manager for Kubernetes
+Terraform,TF,Infrastructure as code tool
+Ansible,,Configuration management and automation
+GitHub Actions,GHA,CI/CD platform integrated with GitHub
+GitLab CI,,CI/CD platform integrated with GitLab
+Jenkins,,Self-hosted automation server
+Argo CD,ArgoCD,GitOps continuous delivery for Kubernetes
+Prometheus,,Metrics monitoring and alerting
+Grafana,,Dashboards and observability
+OpenTelemetry,OTel,Vendor-neutral tracing and metrics
+Nginx,,Web server and reverse proxy
+Linux,,Operating system administration
+Git,,Distributed version control
+CI/CD,,Continuous integration and delivery practices
+Amazon Web Services,AWS,Cloud platform by Amazon
+Microsoft Azure,Azure,Cloud platform by Microsoft
+Google Cloud Platform,GCP,Cloud platform by Google
+Azure DevOps,ADO,Microsoft DevOps suite
+Serverless,,Event-driven functions without server management
+AWS Lambda,Lambda,Serverless compute on AWS
+pytest,,Python testing framework
+Vitest,,Vite-native test runner
+Jest,,JavaScript testing framework
+Playwright,,Browser automation and end-to-end testing
+Cypress,,End-to-end testing for web apps
+Unit Testing,,Testing isolated units of code
+Test-Driven Development,TDD,Writing tests before implementation
+Domain-Driven Design,DDD,Modeling software around the business domain
+Microservices,,Architecture of independently deployable services
+Software Architecture,,Designing system structure and trade-offs
+OAuth 2.0,OAuth,Authorization framework
+OpenAPI,Swagger,API description standard
+Web Security,OWASP,Securing web applications against common attacks
+LLM Integration,LLM,Integrating large language models into applications
+Prompt Engineering,,Designing effective prompts for language models
+Agile Scrum,Scrum,Iterative team process framework
+Code Review,,Reviewing code for quality and knowledge sharing
