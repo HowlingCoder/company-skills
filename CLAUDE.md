@@ -14,17 +14,19 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 
 ## Commands
 
-TODO: verify after scaffold
+Seed skills and frontend commands are planned but not implemented yet.
 
-| Task           | Command                                          |
-| -------------- | ------------------------------------------------ |
-| Backend tests  | `cd backend; uv run pytest`                      |
-| Backend lint   | `cd backend; uv run ruff check .`                |
-| Backend format | `cd backend; uv run ruff format .`               |
-| Migrations     | `cd backend; uv run alembic upgrade head`        |
-| Seed skills    | `cd backend; uv run seed-skills data/skills.csv` |
-| Frontend tests | `cd frontend; npm test`                          |
-| Frontend lint  | `cd frontend; npm run lint`                      |
+| Task           | Command                                                         |
+| -------------- | --------------------------------------------------------------- |
+| Database       | `docker compose up -d db` (host port 5433)                      |
+| Backend dev    | `cd backend; uv run uvicorn skill_management.main:app --reload` |
+| Backend tests  | `cd backend; uv run pytest`                                     |
+| Backend lint   | `cd backend; uv run ruff check .`                               |
+| Backend format | `cd backend; uv run ruff format .`                              |
+| Migrations     | `cd backend; uv run alembic upgrade head`                       |
+| Seed skills    | `cd backend; uv run seed-skills data/skills.csv`                |
+| Frontend tests | `cd frontend; npm test`                                         |
+| Frontend lint  | `cd frontend; npm run lint`                                     |
 
 Run tests and lint for the affected part after every change.
 
@@ -57,6 +59,7 @@ Check the component docs before implementing: https://element.siemens.io/compone
 ## Rules
 
 - Plan first: describe the intended change and wait for approval before editing
+- Never commit - the user reviews and commits all changes
 - Never modify or delete tests to make them pass - fix the code or ask
 - Never edit existing migrations; create a new one
 - Read generated Alembic migrations; autogenerate misses functional indexes
