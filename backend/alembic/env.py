@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import create_engine, pool
 
 from alembic import context
+from skill_management import models  # noqa: F401
 from skill_management.config import settings
 from skill_management.db import Base
 
