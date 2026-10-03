@@ -97,7 +97,11 @@ erDiagram
 | updated_at  | datetime | NOT NULL                       | = created_at on insert, onupdate |
 | deleted_at  | datetime | NULL                           | soft delete                      |
 
-> Initial seed generated via csv - idempotent per name
+> Initial seed generated via csv - idempotent per name.
+> The seed only inserts: skills that already exist (matched by `lower(name)`)
+> are never updated and soft-deleted skills are not reactivated, so a re-run
+> cannot overwrite changes made in the database. An invalid row rejects the
+> whole file.
 
 ## API
 

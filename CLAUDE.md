@@ -14,7 +14,7 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 
 ## Commands
 
-Seed skills and frontend commands are planned but not implemented yet.
+Frontend commands are planned but not implemented yet.
 
 | Task           | Command                                                         |
 | -------------- | --------------------------------------------------------------- |
