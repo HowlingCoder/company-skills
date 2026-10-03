@@ -107,7 +107,7 @@ erDiagram
 
 | Method | Path                      | Purpose                              | Status codes  |
 | ------ | ------------------------- | ------------------------------------ | ------------- |
-| POST   | `/employees/import`       | CSV upload, returns import report    | 200, 400      |
+| POST   | `/employees/import`       | CSV upload, returns import report    | 200, 400, 422 |
 | GET    | `/employees`              | Overview and search (see Feature 4)  | 200, 422      |
 | PUT    | `/employees/{id}/skills`  | Set full skill state of one employee | 200, 404, 422 |
 | POST   | `/skill-assignments/bulk` | Assign one skill to many employees   | 200, 404, 422 |
@@ -131,6 +131,10 @@ erDiagram
 - Normalize headers: lowercase, strip whitespace, remove hyphens
 - Check for all required columns
   - If a column is missing, the file is empty or unreadable: reject the whole file, return 400 with an error message
+  - Empty means no header line at all. A file with a valid header but no data
+    rows is not an error: return 200 with a report of 0 imported, 0 failed
+  - A request without a file field never reaches the import: FastAPI rejects
+    it with its default 422. 400 is reserved for problems with the file content
 
 ##### Process
 
@@ -139,6 +143,11 @@ erDiagram
   - Unreadable row: add error to report, continue
   - Duplicate email within the file: first occurrence is processed, every further occurrence is an error
   - Email belongs to a soft-deleted employee: error, no reactivation
+- Emails are trimmed and lowercased before validation and upsert: the unique
+  constraint is case-sensitive, so `Max@x.com` and `max@x.com` would otherwise
+  become two employees
+- Age must be a whole number from 1 to 150; the upper bound keeps typos and
+  values beyond the integer column out of the database
 - Valid rows are upserted by email (create if new, update all mapped fields if existing)
 - After all rows are processed, return 200 with the report (also for partial imports)
 

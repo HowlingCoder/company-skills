@@ -1,12 +1,18 @@
 import uuid
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import ColumnElement, and_, func, or_, select, true
 from sqlalchemy.orm import Session, selectinload
 
 from skill_management.db import get_session
+from skill_management.employee_import import (
+    EmployeeRow,
+    ImportFileError,
+    RowError,
+    parse_employees,
+)
 from skill_management.models import Employee, Skill, SkillAssignment
 
 router = APIRouter()
@@ -29,6 +35,13 @@ class EmployeeRead(BaseModel):
     email: str
     age: int
     skills: list[EmployeeSkillRead]
+
+
+class ImportReport(BaseModel):
+    imported_count: int
+    failed_count: int
+    imported: list[EmployeeRow]
+    errors: list[RowError]
 
 
 def skill_term_filter(term: str) -> ColumnElement[bool]:
@@ -136,3 +149,54 @@ def list_employees(
         )
         for employee in employees
     ]
+
+
+@router.post("/employees/import")
+def import_employees(
+    file: UploadFile, session: Annotated[Session, Depends(get_session)]
+) -> ImportReport:
+    """Upsert employees from a CSV by email; invalid rows end up in the report."""
+    try:
+        rows, errors = parse_employees(file.file.read())
+    except ImportFileError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    existing = {
+        employee.email.lower(): employee
+        for employee in session.scalars(
+            select(Employee).where(
+                func.lower(Employee.email).in_([row.email for _, row in rows])
+            )
+        )
+    }
+
+    imported = []
+    for line, row in rows:
+        employee = existing.get(row.email)
+        if employee is None:
+            session.add(Employee(**row.model_dump()))
+        elif employee.deleted_at is not None:
+            errors.append(
+                RowError(
+                    line=line,
+                    message=f"Employee {row.email} was deleted and is not reactivated",
+                )
+            )
+            continue
+        else:
+            employee.firstname = row.firstname
+            employee.lastname = row.lastname
+            employee.email = row.email
+            employee.age = row.age
+        imported.append(row)
+
+    # get_session does not commit; all rows of one file share one transaction
+    session.commit()
+
+    errors.sort(key=lambda error: error.line)
+    return ImportReport(
+        imported_count=len(imported),
+        failed_count=len(errors),
+        imported=imported,
+        errors=errors,
+    )
