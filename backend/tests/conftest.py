@@ -3,10 +3,12 @@ from pathlib import Path
 
 import pytest
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from alembic import command
-from skill_management.db import engine
+from skill_management.db import engine, get_session
+from skill_management.main import app
 
 ALEMBIC_INI = Path(__file__).parent.parent / "alembic.ini"
 
@@ -27,3 +29,11 @@ def session() -> Iterator[Session]:
         ) as session:
             yield session
         transaction.rollback()
+
+
+@pytest.fixture
+def client(session: Session) -> Iterator[TestClient]:
+    """API client whose requests use the test session, so they are rolled back."""
+    app.dependency_overrides[get_session] = lambda: session
+    yield TestClient(app)
+    app.dependency_overrides.clear()

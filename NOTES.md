@@ -173,6 +173,7 @@ erDiagram
 
 - With an active skill search, matching skills are highlighted,
   so the team lead sees why an employee is in the result
+  (uses the `matched` flag from `GET /employees`)
 - Spinner shows when the search is in progress
 
 #### Empty state
@@ -228,21 +229,34 @@ One endpoint serves both the overview (req. 2) and the search (req. 4):
 
 | Param         | Matches                             | Notes                                       |
 | ------------- | ----------------------------------- | ------------------------------------------- |
-| `q`           | employee firstname, lastname, email | free text filter                            |
-| `skills`      | skill name or alias                 | one or more terms                           |
+| `q`           | employee firstname, lastname, email | free text filter, substring match           |
+| `skills`      | skill name or alias                 | one or more terms, repeated parameter       |
 | `skill_match` | `and` / `or`                        | default `and`, applies only within `skills` |
 | `min_level`   | proficiency_level >= value          | 1-5, applies to all skill terms             |
 
 #### Rules
 
 - `q` and `skills` are always combined with AND ("Max, who knows Python")
-- Case-insensitive; `*` is a wildcard, otherwise exact match
-  (so `C` does not match C#, C++, CSS); `%` and `_` in input are escaped
+- `q` is a case-insensitive substring match (`mus` finds Muster); several
+  words must all match, each in any of the three fields ("max muster")
+- `skills` terms are case-insensitive; `*` is a wildcard, otherwise exact match
+  (so `C` does not match C#, C++, CSS)
+- `%` and `_` in input are escaped, in `q` and in `skills`
+- `min_level` without `skills` returns employees with at least one skill
+  at that level or higher
 - A term can match several skills (`c*`); with AND a term is satisfied
   if any matched skill fits
 - AND is implemented as one EXISTS per term, not a single join filter
 - Skill description is not searched: it would return employees without
   the actual skill (e.g. Django mentioning Python)
+
+#### Response
+
+- Each employee carries all assigned skills, sorted by level, highest first
+- Each skill has a `matched` flag: true if it satisfies the active skill search
+  (any `skills` term and `min_level`). The backend computes it, so the frontend
+  does not have to rebuild the wildcard and alias matching for the highlighting
+- Without `skills` and `min_level`, `matched` is always false
 
 #### Frontend
 
