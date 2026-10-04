@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import ColumnElement, and_, func, or_, select, true
 from sqlalchemy.orm import Session, selectinload
 
@@ -37,6 +37,22 @@ class EmployeeRead(BaseModel):
     skills: list[EmployeeSkillRead]
 
 
+class SkillLevel(BaseModel):
+    skill_id: uuid.UUID
+    proficiency_level: int = Field(ge=1, le=5)
+
+
+class EmployeeSkillsUpdate(BaseModel):
+    skills: list[SkillLevel]
+
+    @field_validator("skills")
+    @classmethod
+    def unique_skills(cls, skills: list[SkillLevel]) -> list[SkillLevel]:
+        if len({item.skill_id for item in skills}) != len(skills):
+            raise ValueError("Each skill may only be listed once")
+        return skills
+
+
 class ImportReport(BaseModel):
     imported_count: int
     failed_count: int
@@ -64,6 +80,31 @@ def skill_search_filter(
     if min_level is not None:
         filters.append(SkillAssignment.proficiency_level >= min_level)
     return and_(*filters)
+
+
+def employee_read(employee: Employee, matched_ids: set[uuid.UUID]) -> EmployeeRead:
+    """Employee with the assignments of active skills, highest level first."""
+    return EmployeeRead(
+        id=employee.id,
+        firstname=employee.firstname,
+        lastname=employee.lastname,
+        email=employee.email,
+        age=employee.age,
+        skills=[
+            EmployeeSkillRead(
+                skill_id=assignment.skill_id,
+                name=assignment.skill.name,
+                alias=assignment.skill.alias,
+                proficiency_level=assignment.proficiency_level,
+                matched=assignment.id in matched_ids,
+            )
+            for assignment in sorted(
+                employee.skill_assignments,
+                key=lambda a: (-a.proficiency_level, a.skill.name.lower()),
+            )
+            if assignment.skill.deleted_at is None
+        ],
+    )
 
 
 @router.get("/employees")
@@ -125,30 +166,55 @@ def list_employees(
             )
         )
 
-    return [
-        EmployeeRead(
-            id=employee.id,
-            firstname=employee.firstname,
-            lastname=employee.lastname,
-            email=employee.email,
-            age=employee.age,
-            skills=[
-                EmployeeSkillRead(
-                    skill_id=assignment.skill_id,
-                    name=assignment.skill.name,
-                    alias=assignment.skill.alias,
-                    proficiency_level=assignment.proficiency_level,
-                    matched=assignment.id in matched_ids,
-                )
-                for assignment in sorted(
-                    employee.skill_assignments,
-                    key=lambda a: (-a.proficiency_level, a.skill.name.lower()),
-                )
-                if assignment.skill.deleted_at is None
-            ],
+    return [employee_read(employee, matched_ids) for employee in employees]
+
+
+@router.put("/employees/{employee_id}/skills")
+def set_employee_skills(
+    employee_id: uuid.UUID,
+    body: EmployeeSkillsUpdate,
+    session: Annotated[Session, Depends(get_session)],
+) -> EmployeeRead:
+    """Set the full skill state of one employee: add, change level and remove."""
+    employee = session.scalar(
+        select(Employee)
+        .where(Employee.id == employee_id, Employee.deleted_at.is_(None))
+        .options(
+            selectinload(Employee.skill_assignments).joinedload(SkillAssignment.skill)
         )
-        for employee in employees
-    ]
+    )
+    if employee is None:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    levels = {item.skill_id: item.proficiency_level for item in body.skills}
+    known = set(
+        session.scalars(
+            select(Skill.id).where(Skill.id.in_(levels), Skill.deleted_at.is_(None))
+        )
+    )
+    unknown = [str(skill_id) for skill_id in levels if skill_id not in known]
+    if unknown:
+        raise HTTPException(
+            status_code=404, detail=f"Skills not found: {', '.join(unknown)}"
+        )
+
+    for assignment in list(employee.skill_assignments):
+        # Assignments of soft-deleted skills are invisible in the UI: keep them
+        if assignment.skill.deleted_at is not None:
+            continue
+        level = levels.pop(assignment.skill_id, None)
+        if level is None:
+            # delete-orphan on the relationship turns this into a hard delete
+            employee.skill_assignments.remove(assignment)
+        else:
+            assignment.proficiency_level = level
+    for skill_id, level in levels.items():
+        employee.skill_assignments.append(
+            SkillAssignment(skill_id=skill_id, proficiency_level=level)
+        )
+
+    session.commit()
+    return employee_read(employee, set())
 
 
 @router.post("/employees/import")
