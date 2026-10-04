@@ -10,6 +10,7 @@ import { EmployeeApi } from '../api/employee-api';
 import { Employee } from '../api/models';
 import { EMPLOYEES_IMPORTED, ImportDialog } from './import-dialog';
 import { SkillBadges } from './skill-badges';
+import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
 
 @Component({
   imports: [
@@ -63,6 +64,19 @@ export class EmployeeOverview {
     // the dialog stays open after a partial import, so it reports imports as messages
     modalRef.message.subscribe((message) => {
       if (message === EMPLOYEES_IMPORTED) {
+        this.load();
+      }
+    });
+  }
+
+  protected openSkills(employee: Employee): void {
+    const modalRef = this.modalService.show<SkillsDialog, string>(SkillsDialog, {
+      ariaLabelledBy: 'skills-dialog-title',
+      inputValues: { employee },
+      keyboard: true,
+    });
+    modalRef.hidden.subscribe((closeValue) => {
+      if (closeValue === SKILLS_SAVED) {
         this.load();
       }
     });

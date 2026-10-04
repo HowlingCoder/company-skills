@@ -1,0 +1,15 @@
+<input
+  type="text"
+  class="form-control"
+  autocomplete="off"
+  placeholder="Search the skill catalog"
+  typeaheadOptionField="label"
+  [id]="inputId()"
+  [siTypeahead]="source"
+  [typeaheadMinLength]="0"
+  [typeaheadSkipSortingMatches]="true"
+  [typeaheadWaitMs]="200"
+  [typeaheadClearValueOnSelect]="true"
+  [typeaheadScrollable]="true"
+  (typeaheadOnSelect)="onSelect($event)"
+/>

@@ -25,6 +25,12 @@ export interface Employee {
   skills: EmployeeSkill[];
 }
 
+/** One entry of the full skill state sent with PUT /employees/{id}/skills. */
+export interface SkillLevel {
+  skill_id: string;
+  proficiency_level: number;
+}
+
 export interface EmployeeFilter {
   q?: string;
   skills?: string[];

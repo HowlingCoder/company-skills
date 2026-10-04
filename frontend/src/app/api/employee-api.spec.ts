@@ -77,6 +77,20 @@ describe('EmployeeApi', () => {
     req.flush([]);
   });
 
+  it('sends the full skill state of one employee with PUT', () => {
+    const skills = [
+      { skill_id: 's1', proficiency_level: 4 },
+      { skill_id: 's2', proficiency_level: 1 },
+    ];
+
+    api.setSkills('e1', skills).subscribe();
+
+    const req = http.expectOne('/api/employees/e1/skills');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ skills });
+    req.flush({});
+  });
+
   it('passes a server error on to the caller', () => {
     let status: number | undefined;
 

@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { Employee } from '../api/models';
 import { EmployeeOverview } from './employee-overview';
 import { EMPLOYEES_IMPORTED, ImportDialog } from './import-dialog';
+import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
 
 const employees: Employee[] = [
   {
@@ -147,6 +148,46 @@ describe('EmployeeOverview', () => {
     emptyStateButton!.click();
 
     expect(show).toHaveBeenCalledWith(ImportDialog, expect.anything());
+  });
+
+  function manageSkillsButton(name: string): HTMLButtonElement {
+    return element.querySelector<HTMLButtonElement>(
+      `button[aria-label="Manage skills of ${name}"]`,
+    )!;
+  }
+
+  it('opens the skills dialog for the employee of the clicked row', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ hidden: new Subject() } as never);
+    await respond(employees);
+
+    manageSkillsButton('Anna Schmidt').click();
+
+    expect(show).toHaveBeenCalledWith(
+      SkillsDialog,
+      expect.objectContaining({
+        inputValues: { employee: expect.objectContaining({ id: '2', firstname: 'Anna' }) },
+      }),
+    );
+  });
+
+  it('reloads the table after skills were saved, but not after cancel', async () => {
+    // every opened dialog has its own close notification
+    const closed: Subject<string | undefined>[] = [];
+    vi.spyOn(TestBed.inject(SiModalService), 'show').mockImplementation(() => {
+      closed.push(new Subject());
+      return { hidden: closed[closed.length - 1] } as never;
+    });
+    await respond(employees);
+
+    manageSkillsButton('Max Muster').click();
+    closed[0].next(undefined);
+    http.expectNone('/api/employees');
+
+    manageSkillsButton('Max Muster').click();
+    closed[1].next(SKILLS_SAVED);
+    await respond(employees);
   });
 
   it('reloads the table when the dialog reports an import', async () => {

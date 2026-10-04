@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Employee, EmployeeFilter } from './models';
+import { Employee, EmployeeFilter, SkillLevel } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeApi {
@@ -25,5 +25,10 @@ export class EmployeeApi {
       params = params.set('min_level', filter.minLevel);
     }
     return this.http.get<Employee[]>('/api/employees', { params });
+  }
+
+  /** Sets the full skill state: skills missing in the list are removed. */
+  setSkills(employeeId: string, skills: SkillLevel[]): Observable<Employee> {
+    return this.http.put<Employee>(`/api/employees/${employeeId}/skills`, { skills });
   }
 }

@@ -1,0 +1,72 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="skills-dialog-title">
+    Skills of {{ employee().firstname }} {{ employee().lastname }}
+  </h4>
+  <button
+    type="button"
+    class="btn btn-circle btn-tertiary-ghost element-cancel"
+    aria-label="Close"
+    (click)="modalRef.hide()"
+  ></button>
+</div>
+<div class="modal-body">
+  @if (error(); as message) {
+    <si-inline-notification
+      class="mb-6"
+      severity="danger"
+      heading="Skills could not be saved"
+      [message]="message"
+    />
+  }
+
+  @if (entries().length) {
+    <ul class="list-unstyled mb-6" aria-label="Assigned skills">
+      @for (entry of entries(); track entry.skillId) {
+        <li class="d-flex align-items-center gap-4 mb-4">
+          <span class="flex-fill">{{ entry.label }}</span>
+          <select
+            #levelSelect
+            class="form-select w-auto"
+            [attr.aria-label]="'Level of ' + entry.label"
+            (change)="setLevel(entry.skillId, levelSelect.value)"
+          >
+            @if (entry.level === null) {
+              <option value="" selected disabled>Select level</option>
+            }
+            @for (level of levels; track level.value) {
+              <option [value]="level.value" [selected]="entry.level === level.value">
+                {{ level.label }}
+              </option>
+            }
+          </select>
+          <button
+            type="button"
+            class="btn btn-circle btn-sm btn-tertiary element-delete"
+            [attr.aria-label]="'Remove ' + entry.label"
+            (click)="remove(entry.skillId)"
+          ></button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-secondary mb-6">No skills assigned yet.</p>
+  }
+
+  <label class="form-label" for="skills-dialog-add">Add skill</label>
+  <app-skill-picker
+    inputId="skills-dialog-add"
+    [excludedSkillIds]="assignedIds()"
+    (skillSelected)="add($event)"
+  />
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="modalRef.hide()">Cancel</button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="!canSave() || saving()"
+    (click)="save()"
+  >
+    Save
+  </button>
+</div>
