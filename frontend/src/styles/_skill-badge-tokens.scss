@@ -1,0 +1,28 @@
+// Lightness and chroma (OKLCH) of the skill badges for levels 1-5. The hue comes from the skill
+// name, see skill-badges. OKLCH keeps the lightness comparable across hues, so the text contrast
+// stays above 4.5:1 for every hue.
+// The tokens are global because the badges are also rendered inside the popover overlay.
+@use 'sass:list';
+@use '@siemens/element-theme/src/styles/variables/semantic-tokens';
+
+$light-levels: (94% 0.035, 89% 0.065, 84% 0.095, 79% 0.12, 74% 0.145);
+// Bright, saturated colors with dark text: they stand out on the deep blue surfaces
+$dark-levels: (62% 0.06, 68% 0.1, 74% 0.14, 79% 0.17, 84% 0.2);
+
+@mixin level-tokens($levels) {
+  @for $level from 1 through 5 {
+    $entry: list.nth($levels, $level);
+    --skill-badge-lightness-#{$level}: #{list.nth($entry, 1)};
+    --skill-badge-chroma-#{$level}: #{list.nth($entry, 2)};
+  }
+}
+
+:root {
+  --skill-badge-text: #{semantic-tokens.$element-text-primary};
+  @include level-tokens($light-levels);
+}
+
+:root.app--dark {
+  --skill-badge-text: #{semantic-tokens.$element-text-inverse};
+  @include level-tokens($dark-levels);
+}

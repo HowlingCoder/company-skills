@@ -1,5 +1,9 @@
 <ng-template #badge let-skill>
-  <span class="badge skill-badge" [class]="'skill-level-' + skill.proficiency_level">
+  <span
+    class="badge skill-badge"
+    [class]="'skill-level-' + skill.proficiency_level"
+    [style.--skill-hue]="hue(skill.name)"
+  >
     {{ skill.name }} {{ skill.proficiency_level }}
   </span>
 </ng-template>

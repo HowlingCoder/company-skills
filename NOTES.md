@@ -172,9 +172,11 @@ erDiagram
 #### Skill badges
 
 - Each assigned skill is shown as a badge with name and level (e.g. `Python 4`)
-- Color intensity represents the proficiency level (one color, light to strong),
-  but the level is always shown as a number - color is never the only
-  carrier of information (WCAG 1.4.1)
+- Each skill has its own hue, derived from a hash of its name, so a skill
+  looks the same in every row
+- Color intensity represents the proficiency level (light to strong within
+  the hue of the skill), but the level is always shown as a number - color is
+  never the only carrier of information (WCAG 1.4.1)
 - Badges are sorted by level, highest first
 - Overflow: after N badges a `+3` badge opens a popover with the rest
 

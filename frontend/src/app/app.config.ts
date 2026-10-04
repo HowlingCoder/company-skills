@@ -1,8 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideSiDatatableConfig } from '@siemens/element-ng/datatable';
 import { routes } from './app.routes';
+import { ThemeMode } from './theme/theme-mode';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -10,5 +16,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideRouter(routes),
     provideSiDatatableConfig(),
+    provideAppInitializer(() => inject(ThemeMode).init()),
   ],
 };

@@ -1,0 +1,58 @@
+// App colors on top of the Element theme. The public Element theme uses neutral values for its
+// base colors; this swaps them and leaves every other token untouched.
+// - light: petrol accent
+// - dark: deep blue surfaces with a teal accent
+// Text on and against these colors has a contrast of at least 4.5:1.
+@use 'sass:map';
+@use '@siemens/element-theme/src/styles/themes';
+@use '@siemens/element-theme/src/theme/base-colors' as base;
+@use '@siemens/element-theme/src/theme/theme-element';
+
+$light-swaps: (
+  base.$color-interactive-blue-500: #007672,
+  base.$color-teal: #005a57,
+  base.$color-interactive-blue-700: #004644,
+  base.$color-light-bold-green: #e3f5f4,
+  base.$color-focus: #008f88,
+);
+
+$dark-swaps: (
+  // surfaces, borders and secondary text: deep blue instead of black and gray
+  base.$color-deep-blue-900: #000028,
+  base.$color-deep-blue-800: #23233c,
+  base.$color-experimental-deep-blue-850: #333353,
+  base.$color-dark-grayish-navy: #32324b,
+  base.$color-grayish-navy: #3c3c57,
+  base.$color-deep-blue-700: #42425e,
+  base.$color-deep-blue-600: #66667e,
+  base.$color-deep-blue-500: #8a8a9e,
+  base.$color-deep-blue-400: #9999a9,
+  base.$color-deep-blue-300: #b3b3be,
+  // accent
+  base.$color-interactive-coral: #00cccc,
+  base.$color-bold-green: #00ffb9,
+  base.$color-interactive-blue-700: #00b3b3,
+  base.$color-dark-bold-green: #001f39,
+  base.$color-focus: #199fff
+);
+
+// Only the tokens whose color is swapped.
+@function swapped-tokens($theme, $swaps) {
+  $tokens: ();
+  @each $token, $value in $theme {
+    @if map.has-key($swaps, $value) {
+      $tokens: map.set($tokens, $token, map.get($swaps, $value));
+    }
+  }
+  @return $tokens;
+}
+
+@include themes.make-theme(
+  swapped-tokens(theme-element.$theme-element-light, $light-swaps),
+  'element'
+);
+@include themes.make-theme(
+  swapped-tokens(theme-element.$theme-element-dark, $dark-swaps),
+  'element',
+  true
+);

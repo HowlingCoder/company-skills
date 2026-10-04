@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EmployeeSkill } from '../api/models';
+import { skillHue } from '../skills/skill-hue';
 import { SkillBadges } from './skill-badges';
 
 function skill(name: string, level: number): EmployeeSkill {
@@ -35,6 +36,16 @@ describe('SkillBadges', () => {
     const badges = element.querySelectorAll('.skill-badge');
     expect(badges[0].classList).toContain('skill-level-5');
     expect(badges[1].classList).toContain('skill-level-1');
+  });
+
+  it('gives each badge the hue of its skill name, independent of the level', async () => {
+    await render([skill('Python', 5), skill('Docker', 5)]);
+
+    const hues = Array.from(element.querySelectorAll<HTMLElement>('.skill-badge')).map((badge) =>
+      badge.style.getPropertyValue('--skill-hue'),
+    );
+    expect(hues).toEqual([String(skillHue('Python')), String(skillHue('Docker'))]);
+    expect(hues[0]).not.toBe(hues[1]);
   });
 
   it('shows no overflow badge when all skills fit', async () => {

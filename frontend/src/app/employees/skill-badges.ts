@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { SiPopoverBodyDirective, SiPopoverDirective } from '@siemens/element-ng/popover';
 import { EmployeeSkill } from '../api/models';
+import { skillHue } from '../skills/skill-hue';
 
 // Badges shown directly in the table cell; the rest moves into the popover
 export const MAX_VISIBLE_SKILLS = 4;
@@ -18,4 +19,5 @@ export class SkillBadges {
 
   protected readonly visible = computed(() => this.skills().slice(0, MAX_VISIBLE_SKILLS));
   protected readonly overflow = computed(() => this.skills().slice(MAX_VISIBLE_SKILLS));
+  protected readonly hue = skillHue;
 }
