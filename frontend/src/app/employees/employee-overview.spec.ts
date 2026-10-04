@@ -5,6 +5,7 @@ import { provideSiDatatableConfig } from '@siemens/element-ng/datatable';
 import { SiModalService } from '@siemens/element-ng/modal';
 import { Subject } from 'rxjs';
 import { Employee } from '../api/models';
+import { AssignSkillDialog, SKILL_ASSIGNED } from './assign-skill-dialog';
 import { EmployeeOverview } from './employee-overview';
 import { EMPLOYEES_IMPORTED, ImportDialog } from './import-dialog';
 import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
@@ -188,6 +189,63 @@ describe('EmployeeOverview', () => {
     manageSkillsButton('Max Muster').click();
     closed[1].next(SKILLS_SAVED);
     await respond(employees);
+  });
+
+  function assignButton(): HTMLButtonElement {
+    return Array.from(element.querySelectorAll('button')).find((button) =>
+      button.textContent?.trim().startsWith('Assign skill'),
+    )!;
+  }
+
+  async function tickRow(index: number): Promise<void> {
+    const row = element.querySelectorAll('datatable-body-row')[index];
+    row.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();
+    await fixture.whenStable();
+  }
+
+  it('enables "Assign skill" only with a selection and shows the number of rows', async () => {
+    await respond(employees);
+    expect(assignButton().disabled).toBe(true);
+    expect(assignButton().textContent?.trim()).toBe('Assign skill');
+
+    await tickRow(0);
+    await tickRow(1);
+
+    expect(assignButton().disabled).toBe(false);
+    expect(assignButton().textContent?.trim()).toBe('Assign skill (2)');
+  });
+
+  it('opens the assign dialog with the ticked employees', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ hidden: new Subject() } as never);
+    await respond(employees);
+    await tickRow(1);
+
+    assignButton().click();
+
+    expect(show).toHaveBeenCalledWith(
+      AssignSkillDialog,
+      expect.objectContaining({
+        inputValues: { employees: [expect.objectContaining({ id: '2', firstname: 'Anna' })] },
+      }),
+    );
+  });
+
+  it('reloads the table and clears the selection after a skill was assigned', async () => {
+    const hidden = new Subject<string | undefined>();
+    vi.spyOn(TestBed.inject(SiModalService), 'show').mockReturnValue({ hidden } as never);
+    await respond(employees);
+    await tickRow(0);
+    assignButton().click();
+
+    hidden.next(SKILL_ASSIGNED);
+    await respond(employees);
+
+    expect(assignButton().disabled).toBe(true);
+    expect(
+      element.querySelectorAll('datatable-body-row input[type=checkbox]:checked'),
+    ).toHaveLength(0);
   });
 
   it('reloads the table when the dialog reports an import', async () => {

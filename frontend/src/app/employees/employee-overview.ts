@@ -8,6 +8,7 @@ import { SiModalService } from '@siemens/element-ng/modal';
 import { NgxDatatableModule } from '@siemens/ngx-datatable';
 import { EmployeeApi } from '../api/employee-api';
 import { Employee } from '../api/models';
+import { AssignSkillDialog, SKILL_ASSIGNED } from './assign-skill-dialog';
 import { EMPLOYEES_IMPORTED, ImportDialog } from './import-dialog';
 import { SkillBadges } from './skill-badges';
 import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
@@ -37,7 +38,11 @@ export class EmployeeOverview {
       name: `${employee.firstname} ${employee.lastname}`,
     })),
   );
+  /** Rows ticked in the table, for assigning one skill to all of them. */
+  protected readonly selected = signal<Employee[]>([]);
   protected readonly retryAction: Link = { title: 'Retry', action: () => this.load() };
+  // rows are compared by id, so a tick survives when the row objects are rebuilt
+  protected readonly rowIdentity = (row: object): unknown => ('id' in row ? row.id : row);
 
   constructor() {
     this.load();
@@ -45,6 +50,8 @@ export class EmployeeOverview {
 
   protected load(): void {
     this.state.set('loading');
+    // the selection refers to rows of the previous load
+    this.selected.set([]);
     this.employeeApi.list().subscribe({
       next: (employees) => {
         this.employees.set(employees);
@@ -64,6 +71,19 @@ export class EmployeeOverview {
     // the dialog stays open after a partial import, so it reports imports as messages
     modalRef.message.subscribe((message) => {
       if (message === EMPLOYEES_IMPORTED) {
+        this.load();
+      }
+    });
+  }
+
+  protected openAssign(): void {
+    const modalRef = this.modalService.show<AssignSkillDialog, string>(AssignSkillDialog, {
+      ariaLabelledBy: 'assign-skill-dialog-title',
+      inputValues: { employees: this.selected() },
+      keyboard: true,
+    });
+    modalRef.hidden.subscribe((closeValue) => {
+      if (closeValue === SKILL_ASSIGNED) {
         this.load();
       }
     });

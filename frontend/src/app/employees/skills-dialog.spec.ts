@@ -87,6 +87,14 @@ describe('SkillsDialog', () => {
     expect(levelSelect('Docker').value).toBe('2');
   });
 
+  it('links the "Add skill" label to the picker input', () => {
+    const label = Array.from(element.querySelectorAll('label')).find(
+      (candidate) => candidate.textContent?.trim() === 'Add skill',
+    );
+
+    expect(element.querySelector(`#${label?.htmlFor}`)?.tagName).toBe('INPUT');
+  });
+
   it('saves level changes, removals and additions as one full state', async () => {
     await chooseLevel('Python (py)', 4);
     element.querySelector<HTMLButtonElement>('button[aria-label="Remove Docker"]')!.click();

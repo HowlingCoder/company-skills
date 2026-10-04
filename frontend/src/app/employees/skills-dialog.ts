@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { SiFormItemComponent } from '@siemens/element-ng/form';
 import { SiInlineNotificationComponent } from '@siemens/element-ng/inline-notification';
 import { ModalRef } from '@siemens/element-ng/modal';
 import { EmployeeApi } from '../api/employee-api';
@@ -21,7 +22,7 @@ interface SkillEntry {
 
 /** Modal 1: manage all skills of one employee and save them as one full state. */
 @Component({
-  imports: [SiInlineNotificationComponent, SkillPicker],
+  imports: [SiFormItemComponent, SiInlineNotificationComponent, SkillPicker],
   selector: 'app-skills-dialog',
   templateUrl: './skills-dialog.html',
 })

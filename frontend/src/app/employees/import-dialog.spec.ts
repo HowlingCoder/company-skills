@@ -145,6 +145,29 @@ describe('ImportDialog', () => {
     expect(messages).toEqual([]);
   });
 
+  function footerButton(): HTMLButtonElement {
+    return element.querySelector<HTMLButtonElement>('.modal-footer button')!;
+  }
+
+  it('closes without an upload on cancel', () => {
+    expect(footerButton().textContent?.trim()).toBe('Cancel');
+
+    footerButton().click();
+
+    http.expectNone('/api/employees/import');
+    expect(modalRef.hide).toHaveBeenCalledWith();
+    expect(messages).toEqual([]);
+  });
+
+  it('offers "Close" instead of "Cancel" once rows were imported', async () => {
+    await upload();
+    await respond(
+      report({ imported_count: 1, failed_count: 1, errors: [{ line: 3, message: 'age' }] }),
+    );
+
+    expect(footerButton().textContent?.trim()).toBe('Close');
+  });
+
   it('tells the user when the file has a header but no employees', async () => {
     await upload();
     await respond(report({}));

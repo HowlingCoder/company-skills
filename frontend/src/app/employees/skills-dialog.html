@@ -20,9 +20,9 @@
   }
 
   @if (entries().length) {
-    <ul class="list-unstyled mb-6" aria-label="Assigned skills">
+    <ul class="list-group list-group-flush mb-6" aria-label="Assigned skills">
       @for (entry of entries(); track entry.skillId) {
-        <li class="d-flex align-items-center gap-4 mb-4">
+        <li class="list-group-item d-flex align-items-center gap-4">
           <span class="flex-fill">{{ entry.label }}</span>
           <select
             #levelSelect
@@ -52,14 +52,15 @@
     <p class="text-secondary mb-6">No skills assigned yet.</p>
   }
 
-  <label class="form-label" for="skills-dialog-add">Add skill</label>
-  <app-skill-picker
-    inputId="skills-dialog-add"
-    [excludedSkillIds]="assignedIds()"
-    (skillSelected)="add($event)"
-  />
+  <si-form-item label="Add skill" class="mb-0">
+    <app-skill-picker
+      inputId="skills-dialog-add"
+      [excludedSkillIds]="assignedIds()"
+      (skillSelected)="add($event)"
+    />
+  </si-form-item>
 </div>
-<div class="modal-footer">
+<div class="modal-footer border-top">
   <button type="button" class="btn btn-secondary" (click)="modalRef.hide()">Cancel</button>
   <button
     type="button"

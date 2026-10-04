@@ -44,3 +44,9 @@
     </ul>
   }
 </div>
+<div class="modal-footer border-top">
+  <!-- after a partial import some rows are already saved, so there is nothing left to cancel -->
+  <button type="button" class="btn btn-secondary" (click)="modalRef.hide()">
+    {{ rowErrors().length ? 'Close' : 'Cancel' }}
+  </button>
+</div>

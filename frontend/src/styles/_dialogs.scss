@@ -1,0 +1,8 @@
+@use '@siemens/element-theme/src/styles/variables/typography';
+
+// Element sets inline notifications in the larger h4 size. Inside a dialog they sit between
+// form fields and lists in body size, so they use the body size there as well.
+.modal-body .alert {
+  font-size: typography.$si-font-size-body;
+  line-height: typography.$si-line-height-body;
+}

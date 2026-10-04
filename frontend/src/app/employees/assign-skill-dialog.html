@@ -1,0 +1,98 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="assign-skill-dialog-title">Assign skill</h4>
+  <button
+    type="button"
+    class="btn btn-circle btn-tertiary-ghost element-cancel"
+    aria-label="Close"
+    (click)="modalRef.hide()"
+  ></button>
+</div>
+<div class="modal-body">
+  @if (error(); as message) {
+    <si-inline-notification
+      class="mb-6"
+      severity="danger"
+      heading="Skill could not be assigned"
+      [message]="message"
+    />
+  }
+
+  <section class="mb-6 pb-6 border-bottom">
+    <h5 class="si-h5 mb-4" id="assign-skill-employees">
+      Selected employees ({{ employees().length }})
+    </h5>
+    <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0" aria-labelledby="assign-skill-employees">
+      @for (employee of employees(); track employee.id) {
+        <li class="badge bg-default m-0">{{ employee.firstname }} {{ employee.lastname }}</li>
+      }
+    </ul>
+  </section>
+
+  <si-form-item label="Skill">
+    @if (skill(); as chosen) {
+      <div class="d-flex align-items-center gap-4">
+        <span>{{ skillLabel(chosen) }}</span>
+        <button type="button" class="btn btn-sm btn-tertiary" (click)="skill.set(undefined)">
+          Change
+        </button>
+      </div>
+    } @else {
+      <app-skill-picker inputId="assign-skill-skill" (skillSelected)="skill.set($event)" />
+    }
+  </si-form-item>
+
+  <si-form-item label="Level">
+    <select
+      class="form-select"
+      id="assign-skill-level"
+      [ngModel]="level() ?? ''"
+      (ngModelChange)="setLevel($event)"
+    >
+      @if (level() === null) {
+        <option value="" disabled>Select level</option>
+      }
+      @for (option of levels; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </si-form-item>
+
+  @if (conflicts().length) {
+    <section class="pt-6 border-top">
+      <si-inline-notification
+        severity="warning"
+        message="Keep their levels, or overwrite them with the level chosen above."
+        [heading]="conflictHeading()"
+      />
+      <ul
+        class="list-group list-group-flush mt-4"
+        aria-label="Employees who already have this skill"
+      >
+        @for (conflict of conflicts(); track conflict.employeeId) {
+          <li class="list-group-item">{{ conflict.name }}: level {{ conflict.level }}</li>
+        }
+      </ul>
+    </section>
+  }
+</div>
+<div class="modal-footer border-top">
+  <button type="button" class="btn btn-secondary" (click)="modalRef.hide()">Cancel</button>
+  @if (conflicts().length) {
+    <!-- secondary: overwriting can also lower levels -->
+    <button
+      type="button"
+      class="btn btn-secondary"
+      [disabled]="!canSubmit()"
+      (click)="submit(true)"
+    >
+      Overwrite levels
+    </button>
+    <button type="button" class="btn btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+      Keep existing levels
+    </button>
+  } @else {
+    <button type="button" class="btn btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+      Assign
+    </button>
+  }
+</div>

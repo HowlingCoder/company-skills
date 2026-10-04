@@ -1,4 +1,5 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
+import { SI_FORM_ITEM_CONTROL, SiFormItemControl } from '@siemens/element-ng/form';
 import {
   SiTypeaheadDirective,
   TypeaheadMatch,
@@ -12,13 +13,17 @@ import { skillLabel } from './levels';
 /** Autocomplete over the skill catalog; emits the chosen skill and clears itself. */
 @Component({
   imports: [SiTypeaheadDirective],
+  // lets a surrounding si-form-item point its label at the input
+  providers: [{ provide: SI_FORM_ITEM_CONTROL, useExisting: SkillPicker }],
   selector: 'app-skill-picker',
   templateUrl: './skill-picker.html',
 })
-export class SkillPicker {
+export class SkillPicker implements SiFormItemControl {
   private readonly skillApi = inject(SkillApi);
 
   readonly inputId = input.required<string>();
+  readonly id = this.inputId;
+  readonly errormessageId = computed(() => `${this.inputId()}-error`);
   /** Skills that are not offered, e.g. because they are already assigned. */
   readonly excludedSkillIds = input<string[]>([]);
   readonly skillSelected = output<Skill>();
