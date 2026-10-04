@@ -32,6 +32,10 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 
 Run tests and lint for the affected part after every change.
 
+The frontend calls the backend under `/api`. In development `frontend/proxy.conf.json`
+forwards `/api/*` to `http://localhost:8000/*` (prefix removed), so the backend dev
+server must be running.
+
 ## Conventions
 
 - English for code, comments, UI text and docs
