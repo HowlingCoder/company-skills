@@ -11,6 +11,7 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 - `backend/` - Python, FastAPI, SQLAlchemy, Alembic, uv
 - `frontend/` - Angular, Siemens Element
 - `backend/data/skills.csv` - seed data for the skill catalog
+- `backend/data/employees.csv` - sample file for the employee CSV import
 
 ## Commands
 

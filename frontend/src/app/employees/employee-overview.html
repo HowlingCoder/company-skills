@@ -1,0 +1,43 @@
+<div class="p-6">
+  <h2 class="mb-6">Employees</h2>
+
+  @switch (state()) {
+    @case ('loading') {
+      <si-loading-spinner />
+    }
+    @case ('error') {
+      <si-inline-notification
+        severity="danger"
+        heading="Employees could not be loaded"
+        message="The server did not answer as expected. Please try again."
+        [action]="retryAction"
+      />
+    }
+    @case ('loaded') {
+      @if (rows().length) {
+        <ngx-datatable
+          class="table-element"
+          columnMode="flex"
+          siDatatableInteraction
+          [rows]="rows()"
+          [footerHeight]="0"
+        >
+          <ngx-datatable-column name="Name" prop="name" [flexGrow]="2" />
+          <ngx-datatable-column name="Email" prop="email" [flexGrow]="3" />
+          <ngx-datatable-column name="Age" prop="age" [flexGrow]="1" />
+          <ngx-datatable-column name="Skills" prop="skills" [sortable]="false" [flexGrow]="6">
+            <ng-template let-skills="value" ngx-datatable-cell-template>
+              <app-skill-badges [skills]="skills" />
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      } @else {
+        <si-empty-state
+          icon="element-users"
+          heading="No employees yet"
+          content="Import a CSV file to add employees."
+        />
+      }
+    }
+  }
+</div>

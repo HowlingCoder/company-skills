@@ -1,0 +1,32 @@
+<ng-template #badge let-skill>
+  <span class="badge skill-badge" [class]="'skill-level-' + skill.proficiency_level">
+    {{ skill.name }} {{ skill.proficiency_level }}
+  </span>
+</ng-template>
+
+<div class="d-flex align-items-center gap-2">
+  @for (skill of visible(); track skill.skill_id) {
+    <ng-container [ngTemplateOutlet]="badge" [ngTemplateOutletContext]="{ $implicit: skill }" />
+  }
+  @if (overflow().length) {
+    <button
+      type="button"
+      class="badge bg-default skill-overflow"
+      siPopoverPlacement="bottom"
+      [siPopover]="overflowSkills"
+      [attr.aria-label]="'Show ' + overflow().length + ' more skills'"
+    >
+      +{{ overflow().length }}
+    </button>
+  }
+</div>
+
+<ng-template #overflowSkills>
+  <si-popover-body>
+    <div class="d-flex flex-wrap gap-2">
+      @for (skill of overflow(); track skill.skill_id) {
+        <ng-container [ngTemplateOutlet]="badge" [ngTemplateOutletContext]="{ $implicit: skill }" />
+      }
+    </div>
+  </si-popover-body>
+</ng-template>

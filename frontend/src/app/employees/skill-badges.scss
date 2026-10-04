@@ -1,0 +1,28 @@
+@use 'sass:list';
+@use '@siemens/element-theme/src/styles/variables/semantic-tokens';
+
+// One color from light to strong for levels 1-5. The level is always printed
+// as a number too, so color is never the only carrier of information.
+// Text contrast stays above 4.5:1 in the light and the dark theme.
+$level-strength: 0%, 18%, 36%, 54%, 72%;
+
+.skill-badge {
+  margin-inline: 0;
+  color: semantic-tokens.$element-text-primary;
+}
+
+@for $level from 1 through 5 {
+  .skill-level-#{$level} {
+    background: color-mix(
+      in srgb,
+      semantic-tokens.$element-status-information list.nth($level-strength, $level),
+      semantic-tokens.$element-base-information
+    );
+  }
+}
+
+.skill-overflow {
+  margin-inline: 0;
+  border: 0;
+  cursor: pointer;
+}
