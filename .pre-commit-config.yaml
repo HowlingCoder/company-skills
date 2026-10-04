@@ -1,0 +1,26 @@
+# Local hooks call the tools already pinned in backend/uv.lock and
+# frontend/package-lock.json, so hooks and manual runs use the same versions.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (backend)
+        entry: uv run --project backend ruff check --fix
+        language: system
+        files: ^backend/.*\.py$
+      - id: ruff-format
+        name: ruff format (backend)
+        entry: uv run --project backend ruff format
+        language: system
+        files: ^backend/.*\.py$
+      - id: prettier
+        name: prettier (frontend)
+        entry: frontend/node_modules/.bin/prettier --write --ignore-unknown --log-level warn
+        language: system
+        files: ^frontend/
+      - id: eslint
+        name: eslint (frontend)
+        entry: npm --prefix frontend run lint
+        language: system
+        files: ^frontend/.*\.(ts|html)$
+        pass_filenames: false

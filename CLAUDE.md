@@ -27,6 +27,8 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 | Frontend tests | `cd frontend; npm test -- --watch=false`                        |
 | Frontend lint  | `cd frontend; npm run lint`                                     |
 | Frontend format | `cd frontend; npm run format`                                  |
+| Hooks setup    | `uvx pre-commit install` (once per clone)                       |
+| Hooks run all  | `uvx pre-commit run --all-files`                                |
 
 Run tests and lint for the affected part after every change.
 
