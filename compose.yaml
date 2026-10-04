@@ -16,5 +16,18 @@ services:
       timeout: 5s
       retries: 10
 
+  # The whole application in one image: API under /api, frontend under /.
+  # Not needed for development; `docker compose up -d db` starts the database only.
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://skills:skills@db:5432/skills
+    ports:
+      # 8090 on the host, so it does not collide with a backend dev server on 8000
+      - "8090:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-data:

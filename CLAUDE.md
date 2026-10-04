@@ -28,10 +28,15 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 | Frontend tests | `cd frontend; npm test -- --watch=false`                        |
 | Frontend lint  | `cd frontend; npm run lint`                                     |
 | Frontend format | `cd frontend; npm run format`                                  |
+| Full app image | `docker compose up --build` (http://localhost:8090)             |
 | Hooks setup    | `uvx pre-commit install` (once per clone)                       |
 | Hooks run all  | `uvx pre-commit run --all-files`                                |
 
 Run tests and lint for the affected part after every change.
+
+The Docker image serves the API under `/api` and the built frontend under `/`
+(`backend/src/skill_management/web.py`). On start it runs the migrations and the
+skill seed, see `backend/docker-entrypoint.sh`.
 
 The frontend calls the backend under `/api`. In development `frontend/proxy.conf.json`
 forwards `/api/*` to `http://localhost:8000/*` (prefix removed), so the backend dev
