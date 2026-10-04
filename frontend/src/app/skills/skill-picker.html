@@ -1,15 +1,19 @@
 <input
+  #input
   type="text"
   class="form-control"
   autocomplete="off"
-  placeholder="Search the skill catalog"
   typeaheadOptionField="label"
   [id]="inputId()"
+  [placeholder]="placeholder()"
+  [attr.aria-label]="ariaLabel()"
   [siTypeahead]="source"
   [typeaheadMinLength]="0"
+  [typeaheadAutoSelectIndex]="allowFreeText() ? -1 : 0"
   [typeaheadSkipSortingMatches]="true"
   [typeaheadWaitMs]="200"
   [typeaheadClearValueOnSelect]="true"
   [typeaheadScrollable]="true"
   (typeaheadOnSelect)="onSelect($event)"
+  (keydown.enter)="onEnter(input)"
 />

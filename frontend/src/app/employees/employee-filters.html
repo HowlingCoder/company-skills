@@ -1,0 +1,76 @@
+<div class="d-flex flex-wrap align-items-start gap-4 mb-6">
+  <si-search-bar
+    class="flex-fill"
+    colorVariant="base-1"
+    placeholder="Name or email"
+    aria-label="Filter by name or email"
+    [debounceTime]="300"
+    [showIcon]="true"
+    [value]="filter().q"
+    (searchChange)="setQuery($event)"
+  />
+
+  <div class="flex-fill">
+    <app-skill-picker
+      inputId="employee-filter-skill"
+      placeholder="Skill, alias or wildcard (e.g. c*)"
+      ariaLabel="Add a skill to the search"
+      [allowFreeText]="true"
+      (skillSelected)="addSkill($event)"
+      (termEntered)="addTerm($event)"
+    />
+  </div>
+
+  <select
+    #minLevel
+    class="form-select w-auto"
+    aria-label="Minimum level"
+    (change)="setMinLevel(minLevel.value)"
+  >
+    <option value="" [selected]="filter().minLevel === null">Any level</option>
+    @for (level of levels; track level.value) {
+      <option [value]="level.value" [selected]="filter().minLevel === level.value">
+        Min. level {{ level.value }}
+      </option>
+    }
+  </select>
+</div>
+
+@if (filter().skills.length) {
+  <div class="d-flex flex-wrap align-items-center gap-4 mb-6">
+    <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0" aria-label="Skills in the search">
+      @for (term of filter().skills; track term) {
+        <li>
+          <si-filter-pill
+            [filter]="{ filterName: term, title: 'Skill', description: term, status: 'default' }"
+            [totalPills]="filter().skills.length"
+            (deleteFilters)="removeTerm(term)"
+          />
+        </li>
+      }
+    </ul>
+
+    @if (filter().skills.length > 1) {
+      <div class="btn-group" role="group" aria-label="Combine skills with">
+        <input
+          type="radio"
+          class="btn-check"
+          name="skill-match"
+          id="skill-match-and"
+          [checked]="filter().skillMatch === 'and'"
+          (change)="setSkillMatch('and')"
+        />
+        <label class="btn btn-sm" for="skill-match-and">All skills</label>
+        <input
+          type="radio"
+          class="btn-check"
+          name="skill-match"
+          id="skill-match-or"
+          [checked]="filter().skillMatch === 'or'"
+          (change)="setSkillMatch('or')"
+        />
+        <label class="btn btn-sm" for="skill-match-or">Any skill</label>
+      </div>
+    }
+  </div>
+}

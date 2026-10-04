@@ -177,7 +177,8 @@ erDiagram
 - Color intensity represents the proficiency level (light to strong within
   the hue of the skill), but the level is always shown as a number - color is
   never the only carrier of information (WCAG 1.4.1)
-- Badges are sorted by level, highest first
+- Badges are sorted by level, highest first; with an active skill search the
+  matching skills come first, so a match is never hidden in the overflow
 - Overflow: after N badges a `+3` badge opens a popover with the rest
 
 #### Search feedback
@@ -292,8 +293,11 @@ One endpoint serves both the overview (req. 2) and the search (req. 4):
 
 #### Frontend
 
-- Two inputs above the employee table: name/email filter and skill search
+- Filter bar above the employee table: name/email filter, skill search and a
+  minimum level selector
 - Skill search has autocomplete from the skill catalog and an AND/OR toggle
+  (shown from two skill terms on); free text such as `c*` is added with Enter
+- Invalid values in the URL (e.g. `min_level=9`) are ignored, not sent
 - Filter state lives in the URL query params (shareable, survives reload)
 
 ## Out of scope

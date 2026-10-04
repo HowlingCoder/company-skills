@@ -2,9 +2,14 @@
   <span
     class="badge skill-badge"
     [class]="'skill-level-' + skill.proficiency_level"
+    [class.skill-matched]="skill.matched"
+    [class.skill-unmatched]="hasMatches() && !skill.matched"
     [style.--skill-hue]="hue(skill.name)"
   >
     {{ skill.name }} {{ skill.proficiency_level }}
+    @if (skill.matched) {
+      <span class="visually-hidden">(matches the search)</span>
+    }
   </span>
 </ng-template>
 

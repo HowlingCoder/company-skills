@@ -1,4 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SiDatatableModule } from '@siemens/element-ng/datatable';
 import { SiEmptyStateComponent } from '@siemens/element-ng/empty-state';
 import { SiInlineNotificationComponent } from '@siemens/element-ng/inline-notification';
@@ -6,15 +8,35 @@ import { Link } from '@siemens/element-ng/link';
 import { SiLoadingSpinnerComponent } from '@siemens/element-ng/loading-spinner';
 import { SiModalService } from '@siemens/element-ng/modal';
 import { NgxDatatableModule } from '@siemens/ngx-datatable';
+import {
+  BehaviorSubject,
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  map,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { EmployeeApi } from '../api/employee-api';
 import { Employee } from '../api/models';
 import { AssignSkillDialog, SKILL_ASSIGNED } from './assign-skill-dialog';
+import {
+  ActiveFilter,
+  EMPTY_FILTER,
+  filterQueryParams,
+  isFilterActive,
+  parseFilter,
+  toApiFilter,
+} from './employee-filter-url';
+import { EmployeeFilters } from './employee-filters';
 import { EMPLOYEES_IMPORTED, ImportDialog } from './import-dialog';
 import { SkillBadges } from './skill-badges';
 import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
 
 @Component({
   imports: [
+    EmployeeFilters,
     NgxDatatableModule,
     SiDatatableModule,
     SiEmptyStateComponent,
@@ -28,8 +50,16 @@ import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
 export class EmployeeOverview {
   private readonly employeeApi = inject(EmployeeApi);
   private readonly modalService = inject(SiModalService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
+  /** The filter lives in the URL query params, so it survives a reload and can be shared. */
+  protected readonly filter = signal<ActiveFilter>(EMPTY_FILTER);
+  protected readonly filterActive = computed(() => isFilterActive(this.filter()));
+  /** 'loading' only until the first answer; later searches keep the table and set `loading`. */
   protected readonly state = signal<'loading' | 'loaded' | 'error'>('loading');
+  protected readonly loading = signal(true);
+  private readonly reload = new BehaviorSubject<void>(undefined);
   protected readonly employees = signal<Employee[]>([]);
   // name is a single sortable column, so the rows carry the full name
   protected readonly rows = computed(() =>
@@ -45,20 +75,49 @@ export class EmployeeOverview {
   protected readonly rowIdentity = (row: object): unknown => ('id' in row ? row.id : row);
 
   constructor() {
-    this.load();
+    const filter = this.route.queryParamMap.pipe(
+      map(parseFilter),
+      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+    );
+    combineLatest([filter, this.reload])
+      .pipe(
+        tap(([activeFilter]) => {
+          this.filter.set(activeFilter);
+          this.loading.set(true);
+          // the selection refers to rows of the previous load
+          this.selected.set([]);
+        }),
+        // switchMap drops the answer of an older search when a newer one is under way
+        switchMap(([activeFilter]) =>
+          this.employeeApi.list(toApiFilter(activeFilter)).pipe(catchError(() => of(null))),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((employees) => {
+        this.loading.set(false);
+        if (employees === null) {
+          this.state.set('error');
+        } else {
+          this.employees.set(employees);
+          this.state.set('loaded');
+        }
+      });
   }
 
   protected load(): void {
-    this.state.set('loading');
-    // the selection refers to rows of the previous load
-    this.selected.set([]);
-    this.employeeApi.list().subscribe({
-      next: (employees) => {
-        this.employees.set(employees);
-        this.state.set('loaded');
-      },
-      error: () => this.state.set('error'),
+    this.reload.next();
+  }
+
+  protected applyFilter(filter: ActiveFilter): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: filterQueryParams(filter),
+      replaceUrl: true,
     });
+  }
+
+  protected resetFilter(): void {
+    this.applyFilter(EMPTY_FILTER);
   }
 
   protected openImport(): void {

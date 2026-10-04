@@ -14,6 +14,8 @@
     </div>
   </div>
 
+  <app-employee-filters [filter]="filter()" (filterChange)="applyFilter($event)" />
+
   @switch (state()) {
     @case ('loading') {
       <si-loading-spinner />
@@ -35,6 +37,7 @@
           selectionType="checkbox"
           [rows]="rows()"
           [rowIdentity]="rowIdentity"
+          [loadingIndicator]="loading()"
           [selected]="selected()"
           (selectedChange)="selected.set($event)"
           [footerHeight]="0"
@@ -67,6 +70,16 @@
             </ng-template>
           </ngx-datatable-column>
         </ngx-datatable>
+      } @else if (filterActive()) {
+        <si-empty-state
+          icon="element-search"
+          heading="No employees match"
+          content="No employee fits the current filters."
+        >
+          <button type="button" class="btn btn-secondary" (click)="resetFilter()">
+            Reset filters
+          </button>
+        </si-empty-state>
       } @else {
         <si-empty-state
           icon="element-users"

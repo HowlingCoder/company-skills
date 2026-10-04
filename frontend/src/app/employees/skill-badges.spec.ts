@@ -92,6 +92,46 @@ describe('SkillBadges', () => {
     expect(badgeTexts(popover!)).toEqual(['E 1', 'F 1']);
   });
 
+  it('shows skills that match the search first, so a match is never hidden in the popover', async () => {
+    const lowMatch: EmployeeSkill = { ...skill('F', 1), matched: true };
+
+    await render([
+      skill('A', 5),
+      skill('B', 4),
+      skill('C', 3),
+      skill('D', 2),
+      skill('E', 1),
+      lowMatch,
+    ]);
+
+    const visible = Array.from(element.querySelectorAll('.skill-badge'));
+    expect(visible).toHaveLength(4);
+    expect(visible[0].textContent).toContain('F 1');
+    expect(visible[0].classList).toContain('skill-matched');
+    expect(visible.slice(1).map((badge) => badge.textContent?.trim())).toEqual([
+      'A 5',
+      'B 4',
+      'C 3',
+    ]);
+    expect(element.querySelector('.skill-overflow')?.textContent?.trim()).toBe('+2');
+  });
+
+  it('outlines the other skills when some match the search', async () => {
+    await render([{ ...skill('Python', 5), matched: true }, skill('Docker', 3), skill('Go', 1)]);
+
+    const badges = Array.from(element.querySelectorAll('.skill-badge'));
+    expect(badges[0].classList).not.toContain('skill-unmatched');
+    expect(badges[1].classList).toContain('skill-unmatched');
+    expect(badges[2].classList).toContain('skill-unmatched');
+  });
+
+  it('keeps every badge filled without a search', async () => {
+    await render([skill('Python', 5), skill('Docker', 3)]);
+
+    expect(element.querySelectorAll('.skill-unmatched')).toHaveLength(0);
+    expect(element.querySelectorAll('.skill-matched')).toHaveLength(0);
+  });
+
   it('renders nothing for an employee without skills', async () => {
     await render([]);
 

@@ -10,7 +10,7 @@ import { Skill } from '../api/models';
 import { SkillApi } from '../api/skill-api';
 import { skillLabel } from './levels';
 
-/** Autocomplete over the skill catalog; emits the chosen skill and clears itself. */
+/** Autocomplete over the skill catalog; emits the chosen skill or term and clears itself. */
 @Component({
   imports: [SiTypeaheadDirective],
   // lets a surrounding si-form-item point its label at the input
@@ -24,9 +24,17 @@ export class SkillPicker implements SiFormItemControl {
   readonly inputId = input.required<string>();
   readonly id = this.inputId;
   readonly errormessageId = computed(() => `${this.inputId()}-error`);
+  readonly placeholder = input('Search the skill catalog');
+  readonly ariaLabel = input<string>();
   /** Skills that are not offered, e.g. because they are already assigned. */
   readonly excludedSkillIds = input<string[]>([]);
+  /**
+   * Lets Enter submit the typed text as it is, e.g. a wildcard like "c*". No suggestion is
+   * preselected then, so Enter only picks a suggestion the user moved to.
+   */
+  readonly allowFreeText = input(false);
   readonly skillSelected = output<Skill>();
+  readonly termEntered = output<string>();
 
   // The backend searches name and alias; the label carries both, so the typeahead can
   // highlight the matching part
@@ -43,5 +51,20 @@ export class SkillPicker implements SiFormItemControl {
 
   protected onSelect(match: TypeaheadMatch): void {
     this.skillSelected.emit((match.option as { skill: Skill }).skill);
+  }
+
+  protected onEnter(input: HTMLInputElement): void {
+    if (!this.allowFreeText()) {
+      return;
+    }
+    // The typeahead handles Enter first: if a suggestion was picked, the input is empty by now
+    setTimeout(() => {
+      const term = input.value.trim();
+      if (term) {
+        input.value = '';
+        input.dispatchEvent(new Event('input'));
+        this.termEntered.emit(term);
+      }
+    });
   }
 }

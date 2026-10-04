@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 import { provideSiDatatableConfig } from '@siemens/element-ng/datatable';
 import { SiModalService } from '@siemens/element-ng/modal';
 import { Subject } from 'rxjs';
@@ -39,14 +40,30 @@ describe('EmployeeOverview', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideSiDatatableConfig()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideSiDatatableConfig(),
+      ],
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(EmployeeOverview);
     element = fixture.nativeElement;
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    flushCatalogLookups();
+    http.verify();
+  });
+
+  /** The skill picker of the filter bar may look up the catalog when it is rendered or used. */
+  function flushCatalogLookups(): void {
+    http
+      .match((req) => req.url === '/api/skills')
+      .filter((req) => !req.cancelled)
+      .forEach((req) => req.flush([]));
+  }
 
   async function respond(body: Employee[]): Promise<void> {
     http.expectOne('/api/employees').flush(body);
@@ -258,5 +275,179 @@ describe('EmployeeOverview', () => {
     await respond(employees);
 
     expect(element.querySelectorAll('datatable-body-row')).toHaveLength(2);
+  });
+  describe('search', () => {
+    const matching: Employee[] = [
+      {
+        ...employees[0],
+        skills: [
+          { skill_id: 's1', name: 'Python', alias: 'py', proficiency_level: 5, matched: true },
+          { skill_id: 's2', name: 'Docker', alias: null, proficiency_level: 2, matched: false },
+        ],
+      },
+    ];
+
+    /** Answers the pending employee request and returns its query string. */
+    async function respondToSearch(body: Employee[]): Promise<string> {
+      // requests of searches that a newer one replaced are cancelled
+      const pending = http
+        .match((r) => r.url === '/api/employees')
+        .filter((candidate) => !candidate.cancelled);
+      expect(pending).toHaveLength(1);
+      pending[0].flush(body);
+      await fixture.whenStable();
+      return pending[0].request.params.toString();
+    }
+
+    async function openWith(url: string): Promise<void> {
+      await TestBed.inject(Router).navigateByUrl(url);
+      await fixture.whenStable();
+    }
+
+    function currentUrl(): string {
+      return TestBed.inject(Router).url;
+    }
+
+    function pills(): string[] {
+      return Array.from(element.querySelectorAll('si-filter-pill')).map(
+        (pill) => pill.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+      );
+    }
+
+    it('loads with the filters of the URL and shows them in the filter bar', async () => {
+      await openWith('/?q=mus&skills=python&skills=k8s&skill_match=or&min_level=3');
+
+      expect(await respondToSearch(matching)).toBe(
+        'q=mus&skills=python&skills=k8s&skill_match=or&min_level=3',
+      );
+      expect(element.querySelector<HTMLInputElement>('si-search-bar input')?.value).toBe('mus');
+      expect(pills()).toHaveLength(2);
+      expect(pills()[0]).toContain('python');
+      expect(pills()[1]).toContain('k8s');
+      expect(element.querySelector<HTMLInputElement>('#skill-match-or')?.checked).toBe(true);
+      expect(
+        element.querySelector<HTMLSelectElement>('select[aria-label="Minimum level"]')?.value,
+      ).toBe('3');
+    });
+
+    it('searches by name or email after a short typing pause and puts q in the URL', async () => {
+      await respond(employees);
+      const input = element.querySelector<HTMLInputElement>('si-search-bar input')!;
+
+      input.value = 'mus';
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      http.expectNone((r) => r.url === '/api/employees');
+
+      // longer than the debounce of the search bar
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      await fixture.whenStable();
+
+      expect(await respondToSearch(matching)).toBe('q=mus');
+      expect(currentUrl()).toBe('/?q=mus');
+    });
+
+    it('drops URL values the backend would reject', async () => {
+      await openWith('/?min_level=9&skill_match=maybe&skills=%20&q=%20max%20');
+
+      expect(await respondToSearch(employees)).toBe('q=max');
+    });
+
+    it('writes a chosen minimum level to the URL and searches with it', async () => {
+      await respond(employees);
+      const select = element.querySelector<HTMLSelectElement>(
+        'select[aria-label="Minimum level"]',
+      )!;
+
+      select.value = '4';
+      select.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+
+      expect(await respondToSearch(matching)).toBe('min_level=4');
+      expect(currentUrl()).toBe('/?min_level=4');
+    });
+
+    it('offers AND/OR only for several skills and sends OR when chosen', async () => {
+      await openWith('/?skills=python');
+      await respondToSearch(matching);
+      expect(element.querySelector('#skill-match-or')).toBeNull();
+
+      await openWith('/?skills=python&skills=docker');
+      expect(await respondToSearch(matching)).toBe('skills=python&skills=docker');
+
+      element.querySelector<HTMLInputElement>('#skill-match-or')!.click();
+      await fixture.whenStable();
+
+      expect(await respondToSearch(matching)).toBe('skills=python&skills=docker&skill_match=or');
+      expect(currentUrl()).toBe('/?skills=python&skills=docker&skill_match=or');
+    });
+
+    it('removes a skill from the search when its pill is deleted', async () => {
+      await openWith('/?skills=python&skills=docker&skill_match=or');
+      await respondToSearch(matching);
+
+      element.querySelector<HTMLButtonElement>('si-filter-pill button')!.click();
+      await fixture.whenStable();
+
+      // with one skill left, OR has no meaning any more
+      expect(await respondToSearch(matching)).toBe('skills=docker');
+      expect(currentUrl()).toBe('/?skills=docker');
+    });
+
+    it('keeps the table visible while a search is running', async () => {
+      await respond(employees);
+
+      await openWith('/?q=max');
+
+      expect(element.querySelector('si-loading-spinner')).toBeNull();
+      expect(element.querySelectorAll('datatable-body-row')).toHaveLength(2);
+      await respondToSearch(matching);
+      expect(element.querySelectorAll('datatable-body-row')).toHaveLength(1);
+    });
+
+    it('shows the result of the newest search when an older answer is still pending', async () => {
+      await respond(employees);
+      await openWith('/?q=a');
+      const older = http.expectOne((r) => r.url === '/api/employees');
+
+      await openWith('/?q=anna');
+      const newer = http.expectOne((r) => r.url === '/api/employees');
+
+      expect(older.cancelled).toBe(true);
+      newer.flush([employees[1]]);
+      await fixture.whenStable();
+      const rows = element.querySelectorAll('datatable-body-row');
+      expect(rows).toHaveLength(1);
+      expect(rows[0].textContent).toContain('Anna Schmidt');
+    });
+
+    it('marks the skills that match the search', async () => {
+      await openWith('/?skills=python');
+      await respondToSearch(matching);
+
+      const badges = Array.from(element.querySelectorAll('.skill-badge'));
+      expect(badges[0].classList).toContain('skill-matched');
+      expect(badges[0].textContent).toContain('matches the search');
+      expect(badges[1].classList).not.toContain('skill-matched');
+    });
+
+    it('offers to reset the filters when nothing matches, and clears URL and fields', async () => {
+      await openWith('/?q=nobody&min_level=5');
+      await respondToSearch([]);
+
+      const emptyState = element.querySelector('si-empty-state');
+      expect(emptyState?.textContent).toContain('No employees match');
+      expect(emptyState?.textContent).not.toContain('No employees yet');
+
+      emptyState!.querySelector<HTMLButtonElement>('button')!.click();
+      await fixture.whenStable();
+
+      expect(await respondToSearch(employees)).toBe('');
+      expect(currentUrl()).toBe('/');
+      expect(element.querySelector<HTMLInputElement>('si-search-bar input')?.value).toBe('');
+      expect(
+        element.querySelector<HTMLSelectElement>('select[aria-label="Minimum level"]')?.value,
+      ).toBe('');
+    });
   });
 });

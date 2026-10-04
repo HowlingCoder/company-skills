@@ -23,15 +23,6 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Skill Management');
   });
 
-  it('offers the employee overview in the side navigation', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const link = compiled.querySelector<HTMLAnchorElement>('a[si-navbar-vertical-next-item]');
-    expect(link?.textContent).toContain('Employees');
-    expect(link?.getAttribute('href')).toBe('/');
-  });
-
   it('switches between light and dark mode with the header button', async () => {
     localStorage.clear();
     document.documentElement.classList.remove('app--dark');

@@ -84,4 +84,73 @@ describe('SkillPicker', () => {
       .filter((req) => !req.cancelled)
       .forEach((req) => req.flush([]));
   });
+  describe('with free text', () => {
+    let terms: string[];
+
+    async function renderFreeText(): Promise<void> {
+      await render();
+      fixture.componentRef.setInput('allowFreeText', true);
+      terms = [];
+      fixture.componentInstance.termEntered.subscribe((term) => terms.push(term));
+      await fixture.whenStable();
+    }
+
+    async function pressEnter(): Promise<void> {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve));
+      await fixture.whenStable();
+    }
+
+    function flushLookups(): void {
+      http
+        .match((req) => req.url === '/api/skills')
+        .filter((req) => !req.cancelled)
+        .forEach((req) => req.flush([]));
+    }
+
+    it('submits the typed text on Enter, e.g. a wildcard, and clears the input', async () => {
+      await renderFreeText();
+      await search('c*', []);
+
+      await pressEnter();
+
+      expect(terms).toEqual(['c*']);
+      expect(selected).toEqual([]);
+      expect(input.value).toBe('');
+      flushLookups();
+    });
+
+    it('does not pick the first suggestion on Enter', async () => {
+      await renderFreeText();
+      await search('k', [kotlin, kubernetes]);
+
+      await pressEnter();
+
+      expect(terms).toEqual(['k']);
+      expect(selected).toEqual([]);
+      flushLookups();
+    });
+
+    it('ignores Enter on an empty input', async () => {
+      await renderFreeText();
+
+      await pressEnter();
+
+      expect(terms).toEqual([]);
+      flushLookups();
+    });
+  });
+
+  it('does not submit free text unless it is allowed', async () => {
+    await render();
+    const terms: string[] = [];
+    fixture.componentInstance.termEntered.subscribe((term) => terms.push(term));
+    await search('zzz', []);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(terms).toEqual([]);
+    expect(input.value).toBe('zzz');
+  });
 });

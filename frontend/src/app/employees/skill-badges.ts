@@ -14,10 +14,17 @@ export const MAX_VISIBLE_SKILLS = 4;
   templateUrl: './skill-badges.html',
 })
 export class SkillBadges {
-  /** Skills in display order; the backend sorts them by level, highest first. */
+  /** Skills as delivered by the backend: sorted by level, highest first. */
   readonly skills = input.required<EmployeeSkill[]>();
 
-  protected readonly visible = computed(() => this.skills().slice(0, MAX_VISIBLE_SKILLS));
-  protected readonly overflow = computed(() => this.skills().slice(MAX_VISIBLE_SKILLS));
+  // Skills that match the active search come first, so a match is never hidden in the popover
+  private readonly ordered = computed(() => [
+    ...this.skills().filter((skill) => skill.matched),
+    ...this.skills().filter((skill) => !skill.matched),
+  ]);
+  /** With a match in the list, the other skills step back so the matches stand out. */
+  protected readonly hasMatches = computed(() => this.skills().some((skill) => skill.matched));
+  protected readonly visible = computed(() => this.ordered().slice(0, MAX_VISIBLE_SKILLS));
+  protected readonly overflow = computed(() => this.ordered().slice(MAX_VISIBLE_SKILLS));
   protected readonly hue = skillHue;
 }

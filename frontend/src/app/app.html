@@ -21,21 +21,7 @@
     </si-header-actions>
   </si-application-header>
 
-  <si-navbar-vertical-next toggleButtonText="Show side navigation">
-    <si-navbar-vertical-next-items>
-      <a
-        si-navbar-vertical-next-item
-        routerLink="/"
-        routerLinkActive
-        icon="element-users"
-        label="Employees"
-        aria-label="Employees"
-        [routerLinkActiveOptions]="activeOptions"
-      ></a>
-    </si-navbar-vertical-next-items>
-
-    <main class="si-layout-main-padding">
-      <router-outlet />
-    </main>
-  </si-navbar-vertical-next>
+  <main class="si-layout-main-padding">
+    <router-outlet />
+  </main>
 </div>
