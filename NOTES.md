@@ -220,12 +220,33 @@ erDiagram
   - Conflict: two buttons "Keep existing levels" and "Overwrite levels"
     ("Overwrite" is secondary, as it can also lower levels)
 
+#### Full state (PUT)
+
+- Body: `{"skills": [{"skill_id", "proficiency_level"}]}`; an empty list
+  removes all skills
+- Returns the updated employee in the shape of `GET /employees`
+  (`matched` is always false)
+- The same skill twice in one request is rejected with 422
+- Assignments of soft-deleted skills are left untouched: the team lead cannot
+  see them in the UI, so a save must not delete them
+
 #### Conflict handling (bulk)
 
-- Optional parameter `on_conflict=overwrite`; default is skip
+- Optional query parameter `on_conflict=overwrite`; default is skip
 - Existing levels are never changed unless overwrite is sent explicitly
 - The backend does not trust the frontend preview: it checks conflicts itself
-  and returns what happened: created, updated, skipped
+  and returns what happened: created, updated, skipped (employee ids each)
+- With overwrite an existing assignment counts as updated, even if the level
+  is the same
+- An employee id listed several times is processed once
+
+#### Errors (both endpoints)
+
+- Unknown or soft-deleted employee or skill: 404, also when the id comes from
+  the request body
+- 422 is for the shape of the input: level outside 1-5, duplicate skill in a
+  PUT, empty `employee_ids`
+- All or nothing: one unknown id rejects the whole request, nothing is written
 
 ---
 
