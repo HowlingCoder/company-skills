@@ -3,3 +3,6 @@
 
 // Use Element components
 @use '@siemens/element-ng/element-ng';
+
+// Icon font for the element-* icon classes (close button, empty state, ...)
+@use '@siemens/element-icons/dist/style/siemens-element-icons';

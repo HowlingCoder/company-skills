@@ -1,4 +1,5 @@
-// Mirrors the response schemas of the backend (SkillRead, EmployeeSkillRead, EmployeeRead).
+// Mirrors the response schemas of the backend (SkillRead, EmployeeSkillRead, EmployeeRead,
+// ImportReport).
 
 export interface Skill {
   id: string;
@@ -29,4 +30,23 @@ export interface EmployeeFilter {
   skills?: string[];
   skillMatch?: 'and' | 'or';
   minLevel?: number;
+}
+
+export interface ImportedEmployee {
+  lastname: string;
+  firstname: string;
+  email: string;
+  age: number;
+}
+
+export interface RowError {
+  line: number;
+  message: string;
+}
+
+export interface ImportReport {
+  imported_count: number;
+  failed_count: number;
+  imported: ImportedEmployee[];
+  errors: RowError[];
 }

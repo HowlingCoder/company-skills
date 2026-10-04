@@ -2,8 +2,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideSiDatatableConfig } from '@siemens/element-ng/datatable';
+import { SiModalService } from '@siemens/element-ng/modal';
+import { Subject } from 'rxjs';
 import { Employee } from '../api/models';
 import { EmployeeOverview } from './employee-overview';
+import { EMPLOYEES_IMPORTED, ImportDialog } from './import-dialog';
 
 const employees: Employee[] = [
   {
@@ -99,6 +102,62 @@ describe('EmployeeOverview', () => {
     await respond(employees);
 
     expect(element.querySelector('si-inline-notification')).toBeNull();
+    expect(element.querySelectorAll('datatable-body-row')).toHaveLength(2);
+  });
+
+  function importButtons(): HTMLButtonElement[] {
+    return Array.from(element.querySelectorAll('button')).filter(
+      (button) => button.textContent?.trim() === 'Import CSV',
+    );
+  }
+
+  it('opens the import dialog from the button above the table', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ message: new Subject() } as never);
+    await respond(employees);
+
+    importButtons()[0].click();
+
+    expect(show).toHaveBeenCalledWith(ImportDialog, expect.anything());
+  });
+
+  it('lets the user leave the import dialog with Escape or a click outside', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ message: new Subject() } as never);
+    await respond(employees);
+
+    importButtons()[0].click();
+
+    expect(show).toHaveBeenCalledWith(
+      ImportDialog,
+      expect.objectContaining({ keyboard: true, ignoreBackdropClick: false }),
+    );
+  });
+
+  it('offers the import in the empty state too', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ message: new Subject() } as never);
+    await respond([]);
+
+    const emptyStateButton = element.querySelector<HTMLButtonElement>('si-empty-state button');
+    expect(emptyStateButton?.textContent?.trim()).toBe('Import CSV');
+    emptyStateButton!.click();
+
+    expect(show).toHaveBeenCalledWith(ImportDialog, expect.anything());
+  });
+
+  it('reloads the table when the dialog reports an import', async () => {
+    const message = new Subject<string>();
+    vi.spyOn(TestBed.inject(SiModalService), 'show').mockReturnValue({ message } as never);
+    await respond([]);
+    importButtons()[0].click();
+
+    message.next(EMPLOYEES_IMPORTED);
+    await respond(employees);
+
     expect(element.querySelectorAll('datatable-body-row')).toHaveLength(2);
   });
 });

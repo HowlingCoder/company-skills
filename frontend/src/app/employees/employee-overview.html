@@ -1,5 +1,8 @@
 <div class="p-6">
-  <h2 class="mb-6">Employees</h2>
+  <div class="d-flex align-items-center justify-content-between mb-6">
+    <h2 class="mb-0">Employees</h2>
+    <button type="button" class="btn btn-primary" (click)="openImport()">Import CSV</button>
+  </div>
 
   @switch (state()) {
     @case ('loading') {
@@ -36,7 +39,9 @@
           icon="element-users"
           heading="No employees yet"
           content="Import a CSV file to add employees."
-        />
+        >
+          <button type="button" class="btn btn-secondary" (click)="openImport()">Import CSV</button>
+        </si-empty-state>
       }
     }
   }

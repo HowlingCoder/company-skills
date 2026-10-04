@@ -1,0 +1,46 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="import-dialog-title">Import employees</h4>
+  <button
+    type="button"
+    class="btn btn-circle btn-tertiary-ghost element-cancel"
+    aria-label="Close"
+    (click)="modalRef.hide()"
+  ></button>
+</div>
+<div class="modal-body">
+  <p>
+    CSV file with the columns Lastname, Firstname, E-Mail and Age. Employees that already exist are
+    updated by their e-mail address.
+  </p>
+
+  <si-file-uploader
+    accept=".csv"
+    [maxFiles]="1"
+    [uploadConfig]="uploadConfig"
+    (filesChanges)="clearResult()"
+    (uploadCompleted)="onUploadCompleted($event)"
+  />
+
+  @if (fileError(); as message) {
+    <si-inline-notification
+      class="mt-6"
+      severity="danger"
+      heading="File could not be imported"
+      [message]="message"
+    />
+  }
+
+  @if (rowErrors().length) {
+    <si-inline-notification
+      class="mt-6"
+      severity="warning"
+      heading="Some rows were not imported"
+      message="Correct these rows and import the file again."
+    />
+    <ul class="mt-4 mb-0" aria-label="Rows that were not imported">
+      @for (error of rowErrors(); track error.line) {
+        <li>Line {{ error.line }}: {{ error.message }}</li>
+      }
+    </ul>
+  }
+</div>
