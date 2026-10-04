@@ -14,8 +14,6 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 
 ## Commands
 
-Frontend commands are planned but not implemented yet.
-
 | Task           | Command                                                         |
 | -------------- | --------------------------------------------------------------- |
 | Database       | `docker compose up -d db` (host port 5433)                      |
@@ -25,8 +23,10 @@ Frontend commands are planned but not implemented yet.
 | Backend format | `cd backend; uv run ruff format .`                              |
 | Migrations     | `cd backend; uv run alembic upgrade head`                       |
 | Seed skills    | `cd backend; uv run seed-skills data/skills.csv`                |
-| Frontend tests | `cd frontend; npm test`                                         |
+| Frontend dev   | `cd frontend; npm start` (http://localhost:4200)                |
+| Frontend tests | `cd frontend; npm test -- --watch=false`                        |
 | Frontend lint  | `cd frontend; npm run lint`                                     |
+| Frontend format | `cd frontend; npm run format`                                  |
 
 Run tests and lint for the affected part after every change.
 
