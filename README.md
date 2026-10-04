@@ -138,6 +138,16 @@ data behind.
 
 Install the hooks once per clone with `uvx pre-commit install`.
 
+### Continuous integration
+
+GitHub Actions runs three jobs on every push to `main` and on pull requests,
+see [.github/workflows/ci.yml](.github/workflows/ci.yml):
+
+- **Backend:** ruff lint and format check, pytest against PostgreSQL
+- **Frontend:** ESLint, Prettier check, Vitest and a production build
+- **Docker image:** builds the image, starts it with Compose and checks that the
+  frontend is served, the skill catalog is seeded and the sample CSV imports
+
 ## Reset data
 
 Remove all employees and their skill assignments, keep the skill catalog:

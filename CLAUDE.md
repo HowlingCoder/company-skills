@@ -34,6 +34,10 @@ Read it before planning a change. If a task conflicts with NOTES.md, stop and as
 
 Run tests and lint for the affected part after every change.
 
+CI (`.github/workflows/ci.yml`) runs on every push to `main` and on pull requests:
+backend lint and tests, frontend lint, tests and build, and a Docker build with a
+smoke test. Keep its commands in sync with the table above.
+
 The Docker image serves the API under `/api` and the built frontend under `/`
 (`backend/src/skill_management/web.py`). On start it runs the migrations and the
 skill seed, see `backend/docker-entrypoint.sh`.

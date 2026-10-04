@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch replaces the run that is still in progress
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint, tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      # Same database as compose.yaml, on the port the default DATABASE_URL expects
+      db:
+        image: postgres:18
+        env:
+          POSTGRES_USER: skills
+          POSTGRES_PASSWORD: skills
+          POSTGRES_DB: skills
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U skills -d skills"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Check formatting
+        run: uv run ruff format --check .
+      # The tests build the schema through the migrations, so those are covered too
+      - name: Tests
+        run: uv run pytest
+
+  frontend:
+    name: Frontend (lint, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Check formatting
+        run: npx prettier --check .
+      - name: Tests
+        run: npm test -- --watch=false
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Docker image (build, smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and start
+        run: docker compose up --build --detach
+      - name: Wait for the application
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --output /dev/null http://localhost:8090/api/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application did not become healthy in time"
+          exit 1
+      - name: Smoke test
+        run: |
+          # frontend is served
+          curl --fail --silent http://localhost:8090/ | grep --quiet '<app-root>'
+          # the skill catalog was seeded on start
+          test "$(curl --fail --silent http://localhost:8090/api/skills | jq length)" -eq 100
+          # the sample file imports completely
+          curl --fail --silent --form file=@backend/data/employees.csv \
+            http://localhost:8090/api/employees/import \
+            | jq --exit-status '.imported_count == 12 and .failed_count == 0'
+      - name: Logs
+        if: failure()
+        run: docker compose logs
+      - name: Stop
+        if: always()
+        run: docker compose down --volumes
