@@ -1,0 +1,67 @@
+name: Deploy
+
+# Manual only: the AWS resources are not permanent, so a push must not deploy.
+# Start it from the Actions tab on `main`; the AWS role rejects every other branch.
+on:
+  workflow_dispatch:
+
+permissions:
+  # Lets the job request the OIDC token that AWS exchanges for short-lived credentials
+  id-token: write
+  contents: read
+
+# Two deployments at the same time would overwrite each other's task definition
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REPOSITORY: skill-management
+  ECS_CLUSTER: skills-cluster
+  ECS_SERVICE: skills-service
+  TASK_FAMILY: skills
+  CONTAINER_NAME: app
+
+jobs:
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Sign in to AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Sign in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      # The commit hash as tag: every deployment can be traced back to its commit
+      - name: Build and push the image
+        id: image
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+        run: |
+          docker build --tag "$IMAGE" .
+          docker push "$IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+      # The task definition lives in ECS only, so DATABASE_URL never enters the repository
+      - name: Fetch the current task definition
+        run: |
+          aws ecs describe-task-definition --task-definition "$TASK_FAMILY" \
+            --query taskDefinition > "$RUNNER_TEMP/task-definition.json"
+      - name: Set the new image
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ runner.temp }}/task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.image.outputs.image }}
+      - name: Deploy and wait until the service is stable
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.ECS_SERVICE }}
+          wait-for-service-stability: true
