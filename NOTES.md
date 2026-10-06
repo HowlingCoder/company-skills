@@ -22,7 +22,7 @@ Build a working web application with the following capabilities:
 | Backend      | Python, FastAPI, SQLAlchemy, uv                                 |
 | Frontend     | TypeScript, Angular, Siemens Element                            |
 | Tests        | pytest (backend), vitest (frontend)                             |
-| Delivery     | GitHub Actions CI/CD, Docker image                              |
+| Delivery     | GitHub Actions CI, Docker image                                 |
 | Language     | English for code, UI and docs                                   |
 | Commits      | Conventional commits                                            |
 | Code quality | pre-commit hooks: ruff (backend), ESLint + Prettier (frontend)  |
@@ -76,7 +76,7 @@ erDiagram
 | id                | UUID     | PK                             |                                  |
 | employee_id       | UUID     | FK employee.id, NOT NULL       |                                  |
 | skill_id          | UUID     | FK skill.id, NOT NULL          |                                  |
-| proficiency_level | int      | NOT NULL, CHECK 1-5            | 1 beginner, 5 expert             |
+| proficiency_level | int      | NOT NULL, CHECK 1-5            | see level names below            |
 | created_at        | datetime | NOT NULL                       |                                  |
 | updated_at        | datetime | NOT NULL                       | = created_at on insert, onupdate |
 |                   |          | UNIQUE (employee_id, skill_id) | one level per employee and skill |
@@ -84,6 +84,10 @@ erDiagram
 > No `deleted_at`: removing an assignment is a hard delete. Keeps the unique
 > constraint simple, avoids reactivation logic, and the brief requires no
 > assignment history.
+
+Level names: 1 Beginner, 2 Basic, 3 Intermediate, 4 Advanced, 5 Expert. The
+database stores the number; the names live in the frontend
+(`frontend/src/app/skills/levels.ts`).
 
 ### Skill
 
@@ -146,6 +150,8 @@ erDiagram
 - Emails are trimmed and lowercased before validation and upsert: the unique
   constraint is case-sensitive, so `Max@x.com` and `max@x.com` would otherwise
   become two employees
+- Emails longer than 254 characters are invalid: no deliverable address is
+  longer, and it bounds the work of the format check
 - Age must be a whole number from 1 to 150; the upper bound keeps typos and
   values beyond the integer column out of the database
 - Valid rows are upserted by email (create if new, update all mapped fields if existing)
@@ -277,6 +283,8 @@ One endpoint serves both the overview (req. 2) and the search (req. 4):
 - `%` and `_` in input are escaped, in `q` and in `skills`
 - `min_level` without `skills` returns employees with at least one skill
   at that level or higher
+- `min_level` is a minimum: "Kubernetes at an advanced level" is
+  `skills=kubernetes&min_level=4` and also returns experts (level 5)
 - A term can match several skills (`c*`); with AND a term is satisfied
   if any matched skill fits
 - AND is implemented as one EXISTS per term, not a single join filter

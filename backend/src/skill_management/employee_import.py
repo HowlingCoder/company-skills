@@ -7,6 +7,9 @@ from pydantic_core import PydanticCustomError
 
 REQUIRED_COLUMNS = ("lastname", "firstname", "email", "age")
 EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+# Longest address SMTP can deliver to (RFC 5321). Also keeps the pattern fast:
+# its matching time grows with the square of the input length
+MAX_EMAIL_LENGTH = 254
 MAX_AGE = 150
 
 
@@ -43,7 +46,7 @@ class EmployeeRow(BaseModel):
         # Lowercase: the email is the upsert key and the unique constraint is
         # case-sensitive
         value = (value or "").strip().lower()
-        if not EMAIL_PATTERN.fullmatch(value):
+        if len(value) > MAX_EMAIL_LENGTH or not EMAIL_PATTERN.fullmatch(value):
             raise PydanticCustomError("email", "email is not a valid email address")
         return value
 

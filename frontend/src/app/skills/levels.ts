@@ -1,14 +1,15 @@
 export interface ProficiencyLevel {
   value: number;
+  name: string;
   label: string;
 }
 
 export const PROFICIENCY_LEVELS: ProficiencyLevel[] = [
-  { value: 1, label: '1 - Beginner' },
-  { value: 2, label: '2' },
-  { value: 3, label: '3' },
-  { value: 4, label: '4' },
-  { value: 5, label: '5 - Expert' },
+  { value: 1, name: 'Beginner', label: '1 - Beginner' },
+  { value: 2, name: 'Basic', label: '2 - Basic' },
+  { value: 3, name: 'Intermediate', label: '3 - Intermediate' },
+  { value: 4, name: 'Advanced', label: '4 - Advanced' },
+  { value: 5, name: 'Expert', label: '5 - Expert' },
 ];
 
 /** Name with the alias in brackets, e.g. "Kubernetes (K8s)". */

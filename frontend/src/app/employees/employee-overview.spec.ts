@@ -367,6 +367,22 @@ describe('EmployeeOverview', () => {
       expect(currentUrl()).toBe('/?min_level=4');
     });
 
+    it('names every level in the minimum level selector', async () => {
+      await respond(employees);
+      const options = Array.from(
+        element.querySelectorAll('select[aria-label="Minimum level"] option'),
+      ).map((option) => option.textContent?.trim());
+
+      expect(options).toEqual([
+        'Any level',
+        'Min. level 1 (Beginner)',
+        'Min. level 2 (Basic)',
+        'Min. level 3 (Intermediate)',
+        'Min. level 4 (Advanced)',
+        'Min. level 5 (Expert)',
+      ]);
+    });
+
     it('offers AND/OR only for several skills and sends OR when chosen', async () => {
       await openWith('/?skills=python');
       await respondToSearch(matching);
@@ -429,6 +445,22 @@ describe('EmployeeOverview', () => {
       expect(badges[0].classList).toContain('skill-matched');
       expect(badges[0].textContent).toContain('matches the search');
       expect(badges[1].classList).not.toContain('skill-matched');
+    });
+
+    it('explains the wildcard when a skill search finds nobody', async () => {
+      await openWith('/?skills=kube');
+      await respondToSearch([]);
+
+      expect(element.querySelector('si-empty-state')?.textContent).toContain('e.g. kube*');
+    });
+
+    it('does not mention the wildcard when no skill is part of the search', async () => {
+      await openWith('/?q=nobody');
+      await respondToSearch([]);
+
+      const emptyState = element.querySelector('si-empty-state');
+      expect(emptyState?.textContent).toContain('No employee fits the current filters.');
+      expect(emptyState?.textContent).not.toContain('*');
     });
 
     it('offers to reset the filters when nothing matches, and clears URL and fields', async () => {

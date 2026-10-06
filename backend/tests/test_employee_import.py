@@ -157,6 +157,23 @@ def test_invalid_rows_are_reported_with_their_line_and_valid_rows_still_imported
     assert [e[1] for e in stored(session, token)] == ["Eva", "Max"]
 
 
+def test_email_longer_than_254_characters_is_rejected(client: TestClient, token: str):
+    domain = f"@{token}.example.com"
+    longest = "a" * (254 - len(domain)) + domain
+    too_long = "a" + longest
+
+    response = upload(
+        client,
+        f"lastname,firstname,email,age\nLang,Lea,{longest},30\nZu,Zoe,{too_long},30\n",
+    )
+
+    report = response.json()
+    assert [row["email"] for row in report["imported"]] == [longest]
+    assert report["errors"] == [
+        {"line": 3, "message": "email is not a valid email address"}
+    ]
+
+
 def test_row_with_several_problems_reports_all_of_them(client: TestClient):
     response = upload(client, "lastname,firstname,email,age\n,,nobody,-1\n")
 

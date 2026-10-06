@@ -56,6 +56,12 @@ export class EmployeeOverview {
   /** The filter lives in the URL query params, so it survives a reload and can be shared. */
   protected readonly filter = signal<ActiveFilter>(EMPTY_FILTER);
   protected readonly filterActive = computed(() => isFilterActive(this.filter()));
+  /** A skill term matches the whole name or alias, which is the usual reason for an empty result. */
+  protected readonly noMatchText = computed(() =>
+    this.filter().skills.length
+      ? 'No employee fits the current filters. Skills match the whole name or alias; add * for a partial match, e.g. kube*.'
+      : 'No employee fits the current filters.',
+  );
   /** 'loading' only until the first answer; later searches keep the table and set `loading`. */
   protected readonly state = signal<'loading' | 'loaded' | 'error'>('loading');
   protected readonly loading = signal(true);

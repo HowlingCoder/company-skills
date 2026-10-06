@@ -34,7 +34,7 @@ Who knows Kubernetes at an advanced level?
 
 1. Click **Import CSV** and upload `backend/data/employees.csv`.
 2. Tick three employees and click **Assign skill**.
-3. Pick `Kubernetes`, set level 4 and assign.
+3. Pick `Kubernetes`, set level 4 (Advanced) and assign.
 4. Open http://localhost:8090/?skills=kubernetes&min_level=4: the table shows
    these three employees.
 
@@ -158,6 +158,29 @@ see [.github/workflows/ci.yml](.github/workflows/ci.yml):
 - **Docker image:** builds the image, starts it with Compose and checks that the
   frontend is served, the skill catalog is seeded and the sample CSV imports
 
+## Deployment
+
+Nothing is deployed. The image is built to run on a container platform such as
+AWS ECS; this is how I would set it up.
+
+| Piece           | Choice                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| Registry        | ECR. A CD job builds on a version tag and pushes the image, tagged with the commit SHA.     |
+| Runtime         | ECS Fargate service behind an Application Load Balancer, health check on `GET /api/health`. |
+| Database        | RDS for PostgreSQL in private subnets.                                                      |
+| Configuration   | `DATABASE_URL` from Secrets Manager, passed to the task as an environment variable.         |
+| Migrations      | A one-off ECS task runs `alembic upgrade head` before the service is updated.               |
+| Pipeline access | GitHub Actions assumes an IAM role through OIDC, no stored access keys.                     |
+| Login           | The app has no authentication, so the load balancer would require the company login (OIDC). |
+
+What the image needs first:
+
+- The entrypoint runs migrations and the skill seed on every start. That is fine
+  for one container and races when several tasks start together, hence the
+  one-off task above.
+- `/api/health` does not query the database, so it is a liveness check only.
+- The port is fixed at 8000.
+
 ## Reset data
 
 Remove all employees and their skill assignments, keep the skill catalog:
@@ -190,3 +213,14 @@ Left out on purpose, see "Out of scope" in [NOTES.md](NOTES.md):
 - Editing or deleting employees in the UI
 - Assignment history
 - Creating new skills in the UI: the catalog comes from the seed file
+
+## Known limitations
+
+Built as a local demo for one user. Before real use I would address:
+
+- **CSV upload:** no limit on file size, row count or the length of names; the
+  file is read into memory. Meant for files of a few thousand rows.
+- **Concurrent writes:** two requests creating the same assignment or employee
+  at the same moment end in a 500 instead of a 409.
+- **Network exposure:** Compose publishes the app and the database on all host
+  interfaces with a development password.

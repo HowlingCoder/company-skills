@@ -30,7 +30,7 @@
     <option value="" [selected]="filter().minLevel === null">Any level</option>
     @for (level of levels; track level.value) {
       <option [value]="level.value" [selected]="filter().minLevel === level.value">
-        Min. level {{ level.value }}
+        Min. level {{ level.value }} ({{ level.name }})
       </option>
     }
   </select>

@@ -74,7 +74,7 @@
         <si-empty-state
           icon="element-search"
           heading="No employees match"
-          content="No employee fits the current filters."
+          [content]="noMatchText()"
         >
           <button type="button" class="btn btn-secondary" (click)="resetFilter()">
             Reset filters
