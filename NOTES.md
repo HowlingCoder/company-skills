@@ -22,7 +22,7 @@ Build a working web application with the following capabilities:
 | Backend      | Python, FastAPI, SQLAlchemy, uv                                 |
 | Frontend     | TypeScript, Angular, Siemens Element                            |
 | Tests        | pytest (backend), vitest (frontend)                             |
-| Delivery     | GitHub Actions CI, Docker image                                 |
+| Delivery     | GitHub Actions CI and a manual deploy workflow, Docker image    |
 | Language     | English for code, UI and docs                                   |
 | Commits      | Conventional commits                                            |
 | Code quality | pre-commit hooks: ruff (backend), ESLint + Prettier (frontend)  |

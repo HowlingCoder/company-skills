@@ -38,6 +38,9 @@ CI (`.github/workflows/ci.yml`) runs on every push to `main` and on pull request
 backend lint and tests, frontend lint, tests and build, and a Docker build with a
 smoke test. Keep its commands in sync with the table above.
 
+`.github/workflows/deploy.yml` deploys the image to AWS ECS. It is started by hand only,
+never on a push; the AWS environment it targets is not permanent.
+
 The Docker image serves the API under `/api` and the built frontend under `/`
 (`backend/src/skill_management/web.py`). On start it runs the migrations and the
 skill seed, see `backend/docker-entrypoint.sh`.

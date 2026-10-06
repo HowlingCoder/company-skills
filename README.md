@@ -20,8 +20,7 @@ Open http://localhost:8090.
 
 The first start builds the image, creates the database schema and loads the
 skill catalog (100 skills from `backend/data/skills.csv`). The employee list
-starts empty: click **Import CSV** and upload `backend/data/employees.csv`
-(12 sample employees) to get going.
+starts empty, see [Try it](#try-it) below.
 
 | URL                            | What                      |
 | ------------------------------ | ------------------------- |
@@ -32,11 +31,15 @@ starts empty: click **Import CSV** and upload `backend/data/employees.csv`
 
 Who knows Kubernetes at an advanced level?
 
-1. Click **Import CSV** and upload `backend/data/employees.csv`.
-2. Tick three employees and click **Assign skill**.
-3. Pick `Kubernetes`, set level 4 (Advanced) and assign.
-4. Open http://localhost:8090/?skills=kubernetes&min_level=4: the table shows
-   these three employees.
+1. Click **Import CSV**, choose `backend/data/employees.csv` (12 sample
+   employees) and click **Upload**.
+2. Tick three employees and click **Assign skill (3)**.
+3. Pick `Kubernetes`, select **4 - Advanced** and click **Assign**.
+4. In the filter bar, type `kub` into the skill field and pick **Kubernetes**,
+   then choose **Min. level 4 (Advanced)**: the table shows these three employees.
+
+The search is now in the URL (`/?skills=kubernetes&min_level=4`), so the result
+can be shared as a link.
 
 ## What it does
 
@@ -158,28 +161,44 @@ see [.github/workflows/ci.yml](.github/workflows/ci.yml):
 - **Docker image:** builds the image, starts it with Compose and checks that the
   frontend is served, the skill catalog is seeded and the sample CSV imports
 
+A second workflow deploys the image to AWS. It is started by hand and never on a
+push, see [Deployment](#deployment).
+
 ## Deployment
 
-Nothing is deployed. The image is built to run on a container platform such as
-AWS ECS; this is how I would set it up.
+The image ran on AWS ECS Fargate. I set the environment up once with the AWS CLI
+to try it and removed it afterwards, so nothing is running. The workflow that
+deployed to it is in the repository.
 
-| Piece           | Choice                                                                                      |
-| --------------- | ------------------------------------------------------------------------------------------- |
-| Registry        | ECR. A CD job builds on a version tag and pushes the image, tagged with the commit SHA.     |
-| Runtime         | ECS Fargate service behind an Application Load Balancer, health check on `GET /api/health`. |
-| Database        | RDS for PostgreSQL in private subnets.                                                      |
-| Configuration   | `DATABASE_URL` from Secrets Manager, passed to the task as an environment variable.         |
-| Migrations      | A one-off ECS task runs `alembic upgrade head` before the service is updated.               |
-| Pipeline access | GitHub Actions assumes an IAM role through OIDC, no stored access keys.                     |
-| Login           | The app has no authentication, so the load balancer would require the company login (OIDC). |
+**What exists:** [.github/workflows/deploy.yml](.github/workflows/deploy.yml),
+started by hand from the Actions tab.
 
-What the image needs first:
+1. GitHub Actions assumes an IAM role through OIDC. No access keys are stored,
+   and the role accepts only the `main` branch.
+2. The image is built and pushed to ECR, tagged with the commit SHA.
+3. The current task definition is fetched from ECS, gets the new image and is
+   deployed; the job waits until the service is stable.
 
-- The entrypoint runs migrations and the skill seed on every start. That is fine
-  for one container and races when several tasks start together, hence the
-  one-off task above.
-- `/api/health` does not query the database, so it is a liveness check only.
-- The port is fixed at 8000.
+| Piece         | Setup in the test environment                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------ |
+| Runtime       | ECS Fargate service behind an Application Load Balancer, health check on `GET /api/health`       |
+| Network       | Only the load balancer was public, over HTTP; the task accepted traffic from the load balancer only |
+| Database      | RDS for PostgreSQL, reachable from the task only                                                 |
+| Configuration | `DATABASE_URL` as a plain environment variable in the task definition, never in the repository   |
+| Migrations    | Run in the container entrypoint on every start                                                   |
+
+**What I would change for production:**
+
+- HTTPS and the company login (OIDC) at the load balancer. The app has no
+  authentication, and the test environment was reachable without login; that is
+  acceptable for sample data and a few hours only.
+- `DATABASE_URL` from Secrets Manager instead of a plain environment variable.
+- Migrations as a one-off ECS task before the service update. In the entrypoint
+  they race when several tasks start together.
+- Deploy on a version tag and only after CI passed, instead of by hand.
+- A readiness check that queries the database; `/api/health` is a liveness
+  check only.
+- The infrastructure described as code instead of set up by CLI commands.
 
 ## Reset data
 
@@ -216,7 +235,7 @@ Left out on purpose, see "Out of scope" in [NOTES.md](NOTES.md):
 
 ## Known limitations
 
-Built as a local demo for one user. Before real use I would address:
+Built as a demo for one user. Before real use I would address:
 
 - **CSV upload:** no limit on file size, row count or the length of names; the
   file is read into memory. Meant for files of a few thousand rows.
