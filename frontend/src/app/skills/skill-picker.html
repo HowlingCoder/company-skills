@@ -18,6 +18,13 @@
   (typeaheadOnSelect)="onSelect($event)"
   (keydown.enter)="onEnter(input)"
 />
-@if (noMatch() && !allowFreeText()) {
-  <p class="text-secondary mt-2 mb-0" role="status">No matching skill in the catalog.</p>
+@if (!allowFreeText()) {
+  @switch (emptyReason()) {
+    @case ('no-match') {
+      <p class="text-secondary mt-2 mb-0" role="status">No matching skill in the catalog.</p>
+    }
+    @case ('excluded') {
+      <p class="text-secondary mt-2 mb-0" role="status">Already assigned.</p>
+    }
+  }
 }

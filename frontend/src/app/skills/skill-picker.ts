@@ -14,7 +14,7 @@ import {
   TypeaheadMatch,
   TypeaheadOptionSource,
 } from '@siemens/element-ng/typeahead';
-import { map, tap } from 'rxjs';
+import { map } from 'rxjs';
 import { Skill } from '../api/models';
 import { SkillApi } from '../api/skill-api';
 import { skillLabel } from './levels';
@@ -48,19 +48,25 @@ export class SkillPicker implements SiFormItemControl {
   readonly termEntered = output<string>();
 
   private readonly inputElement = viewChild.required<ElementRef<HTMLInputElement>>('input');
-  /** The typed text matches nothing in the catalog. */
-  protected readonly noMatch = signal(false);
+  /**
+   * Why typed text leads to an empty list: nothing in the catalog matches, or every match is
+   * excluded.
+   */
+  protected readonly emptyReason = signal<'no-match' | 'excluded' | undefined>(undefined);
 
   // The backend searches name and alias; the label carries both, so the typeahead can
   // highlight the matching part
   protected readonly source: TypeaheadOptionSource = (search) =>
     this.skillApi.list(search).pipe(
-      tap((skills) => this.noMatch.set(search.trim() !== '' && !skills.length)),
-      map((skills) =>
-        skills
-          .filter((skill) => !this.excludedSkillIds().includes(skill.id))
-          .map((skill) => ({ skill, label: skillLabel(skill) })),
-      ),
+      map((skills) => {
+        const offered = skills.filter((skill) => !this.excludedSkillIds().includes(skill.id));
+        if (!search.trim() || offered.length) {
+          this.emptyReason.set(undefined);
+        } else {
+          this.emptyReason.set(skills.length ? 'excluded' : 'no-match');
+        }
+        return offered.map((skill) => ({ skill, label: skillLabel(skill) }));
+      }),
     );
 
   focus(): void {
@@ -68,7 +74,7 @@ export class SkillPicker implements SiFormItemControl {
   }
 
   protected onSelect(match: TypeaheadMatch): void {
-    this.noMatch.set(false);
+    this.emptyReason.set(undefined);
     this.skillSelected.emit((match.option as { skill: Skill }).skill);
   }
 

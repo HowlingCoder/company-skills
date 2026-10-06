@@ -149,6 +149,25 @@ describe('SkillPicker', () => {
     expect(fixture.nativeElement.textContent).toContain('No matching skill in the catalog.');
   });
 
+  it('says so when every match is excluded, e.g. already assigned', async () => {
+    await render(['s1']);
+
+    await search('kub', [kubernetes]);
+
+    expect(options()).toHaveLength(0);
+    expect(fixture.nativeElement.textContent).toContain('Already assigned.');
+    expect(fixture.nativeElement.textContent).not.toContain('No matching skill');
+  });
+
+  it('shows no hint while a match is left next to an excluded one', async () => {
+    await render(['s1']);
+
+    await search('k', [kotlin, kubernetes]);
+
+    expect(fixture.nativeElement.textContent).not.toContain('Already assigned.');
+    expect(fixture.nativeElement.textContent).not.toContain('No matching skill');
+  });
+
   it('shows no hint while there are matches', async () => {
     await render();
 
