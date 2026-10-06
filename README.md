@@ -28,6 +28,16 @@ starts empty: click **Import CSV** and upload `backend/data/employees.csv`
 | http://localhost:8090          | The application           |
 | http://localhost:8090/api/docs | Interactive API reference |
 
+### Try it
+
+Who knows Kubernetes at an advanced level?
+
+1. Click **Import CSV** and upload `backend/data/employees.csv`.
+2. Tick three employees and click **Assign skill**.
+3. Pick `Kubernetes`, set level 4 and assign.
+4. Open http://localhost:8090/?skills=kubernetes&min_level=4: the table shows
+   these three employees.
+
 ## What it does
 
 | Requirement         | In the app                                                                                             |
@@ -40,7 +50,7 @@ starts empty: click **Import CSV** and upload `backend/data/employees.csv`
 Details worth knowing:
 
 - The search lives in the URL, so a filtered view survives a reload and can be
-  shared as a link, for example `/?skills=python&min_level=4`.
+  shared as a link, for example `/?skills=kubernetes&min_level=4`.
 - With an active search, the skills that caused the match come first and stay
   filled; the other skills are shown as outlines.
 - Each skill has its own badge color, derived from its name. The level sets how
@@ -162,6 +172,14 @@ volume; the next start recreates schema and catalog:
 ```sh
 docker compose down -v
 ```
+
+## Use of AI
+
+Built spec-driven with Claude Code as a pair programmer. I wrote the
+requirements, data model and decisions down in [NOTES.md](NOTES.md) first; the
+agent implemented against that spec under the rules in [CLAUDE.md](CLAUDE.md):
+plan before editing, no commits, no test edits to make them pass. I reviewed and
+committed every change myself.
 
 ## Scope
 

@@ -2,7 +2,7 @@
 
 Take Home Assignment, 1 Person
 
-## Requirements given by Siemens
+## Requirements given by the company
 
 Build a working web application with the following capabilities:
 
