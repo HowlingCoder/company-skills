@@ -1,4 +1,4 @@
-# Skill Management
+# Company Skill Management
 
 Web app for team leads: import employees via CSV, view them in a table,
 assign skills with a proficiency level, search employees by skill and level.

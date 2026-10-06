@@ -1,6 +1,7 @@
-# Basics
+# Company Skill Management
 
-Take Home Assignment, 1 Person
+Requirements, data model and decisions for the take-home assignment, built by
+one developer.
 
 ## Requirements given by the company
 
@@ -63,7 +64,7 @@ erDiagram
 | firstname         | str          | NOT NULL            |                                   |
 | lastname          | str          | NOT NULL            |                                   |
 | email             | str          | NOT NULL, UNIQUE    | upsert key for CSV import         |
-| age               | int          | NOT NULL, CHECK > 0 | stored as given per brief         |
+| age               | int          | NOT NULL, CHECK > 0 | from the assumed CSV format       |
 | created_at        | datetime     | NOT NULL            |                                   |
 | updated_at        | datetime     | NOT NULL            | = created_at on insert, onupdate  |
 | deleted_at        | datetime     | NULL                | soft delete                       |
@@ -82,7 +83,7 @@ erDiagram
 |                   |          | UNIQUE (employee_id, skill_id) | one level per employee and skill |
 
 > No `deleted_at`: removing an assignment is a hard delete. Keeps the unique
-> constraint simple, avoids reactivation logic, and the brief requires no
+> constraint simple, avoids reactivation logic, and the assignment asks for no
 > assignment history.
 
 Level names: 1 Beginner, 2 Basic, 3 Intermediate, 4 Advanced, 5 Expert. The
@@ -116,6 +117,7 @@ database stores the number; the names live in the frontend
 | PUT    | `/employees/{id}/skills`  | Set full skill state of one employee | 200, 404, 422 |
 | POST   | `/skill-assignments/bulk` | Assign one skill to many employees   | 200, 404, 422 |
 | GET    | `/skills?q=`              | Skill catalog, used for autocomplete | 200           |
+| GET    | `/health`                 | Liveness check, no database access   | 200           |
 
 ## Features
 
@@ -124,6 +126,12 @@ database stores the number; the names live in the frontend
 #### CSV Format
 
 `Lastname, Firstname, E-Mail, Age, Address`
+
+The assignment leaves the file format and the "relevant attributes" open. I
+assumed a plain employee list, as a team lead would export it from a
+spreadsheet. Name, e-mail and age are stored and shown; e-mail identifies an
+employee across imports. The address is not needed to find people by skill, so
+it is not stored.
 
 - Required columns: lastname, firstname, email, age
 - Unknown columns (e.g. Address) are ignored - only allowlisted fields are mapped
@@ -314,4 +322,6 @@ One endpoint serves both the overview (req. 2) and the search (req. 4):
 - Pagination
 - Editing or deleting employees in the UI
 - Assignment history/ logging
-- Skill creation by team leads (optional, last slice if time allows): inline create from the assignment autocomplete via POST /skills.
+- Skill creation by team leads: the catalog comes from the seed file. An inline
+  create from the assignment autocomplete (POST /skills) was planned as an
+  optional last slice and is not built.

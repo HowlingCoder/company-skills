@@ -1,4 +1,4 @@
-# Skill Management
+# Company Skill Management
 
 Web app for team leads: import employees from a CSV file, see them in a table,
 assign skills with a proficiency level and search employees by skill and level.
@@ -70,7 +70,8 @@ Muster,Max,max.muster@example.com,34,Musterstrasse 1 80331 Munich
 ```
 
 `lastname`, `firstname`, `e-mail` and `age` are required. Other columns are
-ignored, comma and semicolon are both accepted as delimiter.
+ignored, comma and semicolon are both accepted as delimiter. The assignment
+gives no file format; this one is my assumption of a plain employee list.
 
 ## Tech stack
 
@@ -111,6 +112,7 @@ In the Docker image every path is prefixed with `/api`.
 | PUT    | `/employees/{id}/skills`  | Set all skills of one employee       |
 | POST   | `/skill-assignments/bulk` | Assign one skill to many employees   |
 | GET    | `/skills?q=`              | Skill catalog, used for autocomplete |
+| GET    | `/health`                 | Liveness check, no database access   |
 
 ## Development
 
@@ -239,6 +241,12 @@ Built as a demo for one user. Before real use I would address:
 
 - **CSV upload:** no limit on file size, row count or the length of names; the
   file is read into memory. Meant for files of a few thousand rows.
+- **CSV encoding and quotes:** the file must be UTF-8, so an Excel export saved
+  as Windows-1252 is rejected as a whole. An unclosed quote swallows the rows
+  after it, and the report counts them as one error.
+- **Search and bulk input:** no upper bound on the length of the search text,
+  the number of skill terms or the number of employee ids. Extreme input can
+  end in a 500 instead of a 422.
 - **Concurrent writes:** two requests creating the same assignment or employee
   at the same moment end in a 500 instead of a 409.
 - **Network exposure:** Compose publishes the app and the database on all host

@@ -20,7 +20,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Skill Management');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Company Skill Management');
   });
 
   it('switches between light and dark mode with the header button', async () => {

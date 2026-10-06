@@ -16,7 +16,10 @@ from skill_management.main import app as api
 def create_app(frontend_dir: Path | None = None) -> FastAPI:
     # The API keeps its own docs under /api/docs; this wrapper has no routes
     web = FastAPI(
-        title="Skill Management", docs_url=None, redoc_url=None, openapi_url=None
+        title="Company Skill Management",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
     )
     # Order matters: the frontend mount at / would otherwise catch /api too
     web.mount("/api", api)
