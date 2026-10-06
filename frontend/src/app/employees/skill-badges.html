@@ -23,7 +23,9 @@
       class="badge bg-default skill-overflow"
       siPopoverPlacement="bottom"
       [siPopover]="overflowSkills"
-      [attr.aria-label]="'Show ' + overflow().length + ' more skills'"
+      [attr.aria-label]="
+        'Show ' + overflow().length + (overflow().length === 1 ? ' more skill' : ' more skills')
+      "
     >
       +{{ overflow().length }}
     </button>

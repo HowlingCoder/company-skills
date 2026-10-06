@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import {
   FileUploadConfig,
   FileUploadResult,
@@ -36,6 +36,12 @@ export class ImportDialog {
   protected readonly fileError = signal<string | undefined>(undefined);
   /** Rows the backend skipped; the rest of the file was imported. */
   protected readonly rowErrors = signal<RowError[]>([]);
+  private readonly importedCount = signal(0);
+  // the uploader shows a green tick for the upload itself, so the heading states what was imported
+  protected readonly partialImportHeading = computed(() => {
+    const total = this.importedCount() + this.rowErrors().length;
+    return `${this.importedCount()} of ${total} rows imported`;
+  });
 
   protected clearResult(): void {
     this.fileError.set(undefined);
@@ -53,6 +59,7 @@ export class ImportDialog {
     this.modalRef.message.next(EMPLOYEES_IMPORTED);
     if (report.failed_count > 0) {
       this.rowErrors.set(report.errors);
+      this.importedCount.set(report.imported_count);
       this.toasts.queueToastNotification(
         'warning',
         'Import incomplete',

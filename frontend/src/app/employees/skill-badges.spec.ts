@@ -71,6 +71,14 @@ describe('SkillBadges', () => {
     expect(overflow?.getAttribute('aria-label')).toBe('Show 2 more skills');
   });
 
+  it('names a single hidden skill in the singular', async () => {
+    await render([skill('A', 5), skill('B', 4), skill('C', 3), skill('D', 2), skill('E', 1)]);
+
+    expect(element.querySelector('.skill-overflow')?.getAttribute('aria-label')).toBe(
+      'Show 1 more skill',
+    );
+  });
+
   it('opens a popover with the remaining skills when the +N badge is clicked', async () => {
     await render([
       skill('A', 5),

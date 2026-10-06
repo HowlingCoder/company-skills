@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ModalRef } from '@siemens/element-ng/modal';
+import { SiToastNotificationService } from '@siemens/element-ng/toast-notification';
 import { Employee, Skill } from '../api/models';
 import { SkillPicker } from '../skills/skill-picker';
 import { SKILLS_SAVED, SkillsDialog } from './skills-dialog';
@@ -182,5 +183,63 @@ describe('SkillsDialog', () => {
 
     http.expectNone('/api/employees/e1/skills');
     expect(modalRef.hide).toHaveBeenCalledWith();
+  });
+
+  it('confirms a successful save with a toast', async () => {
+    const queueToast = vi
+      .spyOn(TestBed.inject(SiToastNotificationService), 'queueToastNotification')
+      .mockReturnValue(undefined as never);
+    await chooseLevel('Docker', 3);
+
+    button('Save').click();
+    http.expectOne('/api/employees/e1/skills').flush({ ...employee, skills: [] });
+
+    expect(queueToast).toHaveBeenCalledWith(
+      'success',
+      'Skills saved',
+      'The skills of Max Muster were updated.',
+    );
+  });
+
+  it('shows no toast when saving fails', async () => {
+    const queueToast = vi
+      .spyOn(TestBed.inject(SiToastNotificationService), 'queueToastNotification')
+      .mockReturnValue(undefined as never);
+
+    button('Save').click();
+    http
+      .expectOne('/api/employees/e1/skills')
+      .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+
+    expect(queueToast).not.toHaveBeenCalled();
+  });
+
+  describe('keyboard', () => {
+    function removeButton(label: string): HTMLButtonElement {
+      return element.querySelector<HTMLButtonElement>(`button[aria-label="Remove ${label}"]`)!;
+    }
+
+    it('moves the focus to the row that follows a removed skill', async () => {
+      removeButton('Python (py)').click();
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(removeButton('Docker'));
+    });
+
+    it('moves the focus to the row before when the last skill is removed', async () => {
+      removeButton('Docker').click();
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(removeButton('Python (py)'));
+    });
+
+    it('moves the focus to "Add skill" when no skill is left', async () => {
+      removeButton('Python (py)').click();
+      await fixture.whenStable();
+      removeButton('Docker').click();
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(element.querySelector('#skills-dialog-add'));
+    });
   });
 });

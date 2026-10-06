@@ -1,5 +1,15 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SiFormItemComponent } from '@siemens/element-ng/form';
 import { SiInlineNotificationComponent } from '@siemens/element-ng/inline-notification';
@@ -31,6 +41,7 @@ export class AssignSkillDialog {
   protected readonly modalRef = inject<ModalRef<AssignSkillDialog, string>>(ModalRef);
   private readonly skillAssignmentApi = inject(SkillAssignmentApi);
   private readonly toasts = inject(SiToastNotificationService);
+  private readonly injector = inject(Injector);
 
   readonly employees = input.required<Employee[]>();
 
@@ -40,6 +51,8 @@ export class AssignSkillDialog {
   protected readonly level = signal<number | null>(null);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | undefined>(undefined);
+  private readonly picker = viewChild(SkillPicker);
+  private readonly levelSelect = viewChild.required<ElementRef<HTMLSelectElement>>('levelSelect');
 
   /**
    * Preview from the table data: who already has the chosen skill. The backend checks the
@@ -73,6 +86,17 @@ export class AssignSkillDialog {
 
   protected setLevel(value: string): void {
     this.level.set(Number(value));
+  }
+
+  // The picker and the "Change" button replace each other, so the focus has to move on by hand
+  protected selectSkill(skill: Skill): void {
+    this.skill.set(skill);
+    afterNextRender(() => this.levelSelect().nativeElement.focus(), { injector: this.injector });
+  }
+
+  protected changeSkill(): void {
+    this.skill.set(undefined);
+    afterNextRender(() => this.picker()?.focus(), { injector: this.injector });
   }
 
   protected submit(overwrite = false): void {

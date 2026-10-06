@@ -232,6 +232,91 @@ describe('EmployeeOverview', () => {
     expect(assignButton().textContent?.trim()).toBe('Assign skill (2)');
   });
 
+  it('keeps the skill dialogs open on Escape, so unsaved input is not lost', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ hidden: new Subject() } as never);
+    await respond(employees);
+
+    manageSkillsButton('Max Muster').click();
+    await tickRow(0);
+    assignButton().click();
+
+    // Element modals ignore Escape unless `keyboard` is set
+    for (const dialog of [SkillsDialog, AssignSkillDialog]) {
+      const options = show.mock.calls.find(([content]) => content === dialog)?.[1];
+      expect(options).toBeDefined();
+      expect(options).not.toHaveProperty('keyboard');
+    }
+  });
+
+  it('tells why "Assign skill" is disabled until rows are selected', async () => {
+    await respond(employees);
+    expect(assignButton().title).toBe('Select employees in the table first');
+
+    await tickRow(0);
+
+    expect(assignButton().hasAttribute('title')).toBe(false);
+  });
+
+  it('offers "Assign skill" again after the table while rows are selected', async () => {
+    const show = vi
+      .spyOn(TestBed.inject(SiModalService), 'show')
+      .mockReturnValue({ hidden: new Subject() } as never);
+    await respond(employees);
+    const assignButtons = (): HTMLButtonElement[] =>
+      Array.from(element.querySelectorAll('button')).filter((button) =>
+        button.textContent?.trim().startsWith('Assign skill'),
+      );
+    expect(assignButtons()).toHaveLength(1);
+
+    await tickRow(1);
+
+    expect(assignButtons()).toHaveLength(2);
+    const afterTable = assignButtons()[1];
+    expect(afterTable.textContent?.trim()).toBe('Assign skill (1)');
+    expect(
+      element.querySelector('ngx-datatable')!.compareDocumentPosition(afterTable) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    afterTable.click();
+    expect(show).toHaveBeenCalledWith(
+      AssignSkillDialog,
+      expect.objectContaining({
+        inputValues: { employees: [expect.objectContaining({ id: '2' })] },
+      }),
+    );
+  });
+
+  describe('sorting by name', () => {
+    function nameHeader(): HTMLElement {
+      return element.querySelector<HTMLElement>('datatable-header-cell[title="Name"]')!;
+    }
+
+    function names(): string[] {
+      return Array.from(element.querySelectorAll('datatable-body-row')).map(
+        (row) => row.querySelector('datatable-body-cell')?.textContent?.trim() ?? '',
+      );
+    }
+
+    it('marks the name column as sorted from the start', async () => {
+      await respond(employees);
+
+      expect(nameHeader().getAttribute('aria-sort')).toBe('ascending');
+      expect(names()).toEqual(['Max Muster', 'Anna Schmidt']);
+    });
+
+    it('sorts by last name, not by the first name shown first', async () => {
+      await respond(employees);
+
+      nameHeader().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      await fixture.whenStable();
+
+      expect(nameHeader().getAttribute('aria-sort')).toBe('descending');
+      expect(names()).toEqual(['Anna Schmidt', 'Max Muster']);
+    });
+  });
+
   it('opens the assign dialog with the ticked employees', async () => {
     const show = vi
       .spyOn(TestBed.inject(SiModalService), 'show')

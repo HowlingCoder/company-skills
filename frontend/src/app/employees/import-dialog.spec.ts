@@ -114,6 +114,24 @@ describe('ImportDialog', () => {
     expect(modalRef.hide).not.toHaveBeenCalled();
   });
 
+  it('states how many rows of a partial import were imported', async () => {
+    await upload();
+    await respond(
+      report({
+        imported_count: 1,
+        failed_count: 2,
+        errors: [
+          { line: 3, message: 'age must be a whole number between 1 and 150' },
+          { line: 4, message: 'email is not a valid email address' },
+        ],
+      }),
+    );
+
+    expect(element.querySelector('si-inline-notification')?.textContent).toContain(
+      '1 of 3 rows imported',
+    );
+  });
+
   it('shows the reason from the backend when the file is rejected', async () => {
     await upload();
     http

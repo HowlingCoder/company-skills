@@ -274,4 +274,21 @@ describe('AssignSkillDialog', () => {
     );
     expect(modalRef.hide).not.toHaveBeenCalled();
   });
+
+  describe('keyboard', () => {
+    it('moves the focus to the level once a skill is picked', async () => {
+      await pick(docker);
+
+      expect(document.activeElement).toBe(element.querySelector('#assign-skill-level'));
+    });
+
+    it('moves the focus back to the skill input on "Change"', async () => {
+      await pick(docker);
+
+      button('Change').click();
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(element.querySelector('#assign-skill-skill'));
+    });
+  });
 });

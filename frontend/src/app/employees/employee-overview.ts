@@ -7,7 +7,7 @@ import { SiInlineNotificationComponent } from '@siemens/element-ng/inline-notifi
 import { Link } from '@siemens/element-ng/link';
 import { SiLoadingSpinnerComponent } from '@siemens/element-ng/loading-spinner';
 import { SiModalService } from '@siemens/element-ng/modal';
-import { NgxDatatableModule } from '@siemens/ngx-datatable';
+import { NgxDatatableModule, SortPropDir } from '@siemens/ngx-datatable';
 import {
   BehaviorSubject,
   catchError,
@@ -79,6 +79,12 @@ export class EmployeeOverview {
   protected readonly retryAction: Link = { title: 'Retry', action: () => this.load() };
   // rows are compared by id, so a tick survives when the row objects are rebuilt
   protected readonly rowIdentity = (row: object): unknown => ('id' in row ? row.id : row);
+  // The backend delivers the rows by last name; telling the table shows the sort arrow from the start
+  protected readonly initialSorts: SortPropDir[] = [{ prop: 'name', dir: 'asc' }];
+  /** The name column shows "Firstname Lastname" but sorts like the backend: last name first. */
+  protected readonly byLastname = (_a: unknown, _b: unknown, a: Employee, b: Employee): number =>
+    a.lastname.localeCompare(b.lastname, undefined, { sensitivity: 'base' }) ||
+    a.firstname.localeCompare(b.firstname, undefined, { sensitivity: 'base' });
 
   constructor() {
     const filter = this.route.queryParamMap.pipe(
@@ -144,8 +150,8 @@ export class EmployeeOverview {
   protected openAssign(): void {
     const modalRef = this.modalService.show<AssignSkillDialog, string>(AssignSkillDialog, {
       ariaLabelledBy: 'assign-skill-dialog-title',
+      // no `keyboard`: Escape must not throw away a choice that is not assigned yet
       inputValues: { employees: this.selected() },
-      keyboard: true,
     });
     modalRef.hidden.subscribe((closeValue) => {
       if (closeValue === SKILL_ASSIGNED) {
@@ -157,8 +163,8 @@ export class EmployeeOverview {
   protected openSkills(employee: Employee): void {
     const modalRef = this.modalService.show<SkillsDialog, string>(SkillsDialog, {
       ariaLabelledBy: 'skills-dialog-title',
+      // no `keyboard`: Escape must not throw away unsaved changes
       inputValues: { employee },
-      keyboard: true,
     });
     modalRef.hidden.subscribe((closeValue) => {
       if (closeValue === SKILLS_SAVED) {

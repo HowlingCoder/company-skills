@@ -56,3 +56,10 @@ $dark-swaps: (
   'element',
   true
 );
+
+// Element's dark theme gives dropdown menus and their active item the same color, so the
+// suggestion reached with the arrow keys cannot be seen. Hover is one step darker than the
+// menu; the active item goes one step further.
+:root.app--dark .dropdown-menu {
+  --si-sys-color-background-active: var(--element-base-1);
+}

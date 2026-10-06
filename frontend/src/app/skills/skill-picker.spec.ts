@@ -141,6 +141,64 @@ describe('SkillPicker', () => {
     });
   });
 
+  it('says so when the typed text matches no skill', async () => {
+    await render();
+
+    await search('cobol', []);
+
+    expect(fixture.nativeElement.textContent).toContain('No matching skill in the catalog.');
+  });
+
+  it('shows no hint while there are matches', async () => {
+    await render();
+
+    await search('k', [kotlin, kubernetes]);
+
+    expect(fixture.nativeElement.textContent).not.toContain('No matching skill');
+  });
+
+  it('shows no hint with free text, where a term like a wildcard needs no match', async () => {
+    await render();
+    fixture.componentRef.setInput('allowFreeText', true);
+
+    await search('c*', []);
+
+    expect(fixture.nativeElement.textContent).not.toContain('No matching skill');
+  });
+
+  it('offers the whole catalog, not only the first matches', async () => {
+    await render();
+    const catalog: Skill[] = Array.from({ length: 25 }, (_, index) => ({
+      id: `c${index}`,
+      name: `Skill ${index}`,
+      alias: null,
+      description: null,
+    }));
+
+    await search('skill', catalog);
+
+    expect(options()).toHaveLength(25);
+  });
+
+  it('waits for the minimum length before it looks up suggestions', async () => {
+    await render();
+    fixture.componentRef.setInput('minLength', 1);
+    await fixture.whenStable();
+
+    input.focus();
+    input.dispatchEvent(new Event('input'));
+    await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_MS));
+    await fixture.whenStable();
+
+    expect(options()).toHaveLength(0);
+    http
+      .match((req) => req.url === '/api/skills')
+      .filter((req) => !req.cancelled)
+      .forEach((req) => req.flush([kotlin]));
+    await fixture.whenStable();
+    expect(options()).toHaveLength(0);
+  });
+
   it('does not submit free text unless it is allowed', async () => {
     await render();
     const terms: string[] = [];

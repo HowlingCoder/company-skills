@@ -6,6 +6,7 @@
         type="button"
         class="btn btn-secondary"
         [disabled]="!selected().length"
+        [attr.title]="selected().length ? null : 'Select employees in the table first'"
         (click)="openAssign()"
       >
         Assign skill{{ selected().length ? ' (' + selected().length + ')' : '' }}
@@ -41,22 +42,37 @@
           [selected]="selected()"
           (selectedChange)="selected.set($event)"
           [footerHeight]="0"
+          [scrollbarH]="true"
+          [sorts]="initialSorts"
         >
           <ngx-datatable-column
             name="Name"
             prop="name"
+            [comparator]="byLastname"
             [flexGrow]="2"
+            [minWidth]="180"
             [checkboxable]="true"
             [headerCheckboxable]="true"
           />
-          <ngx-datatable-column name="Email" prop="email" [flexGrow]="3" />
-          <ngx-datatable-column name="Age" prop="age" [flexGrow]="1" />
-          <ngx-datatable-column name="Skills" prop="skills" [sortable]="false" [flexGrow]="6">
+          <ngx-datatable-column name="Email" prop="email" [flexGrow]="3" [minWidth]="200" />
+          <ngx-datatable-column name="Age" prop="age" [flexGrow]="1" [minWidth]="70" />
+          <ngx-datatable-column
+            name="Skills"
+            prop="skills"
+            [sortable]="false"
+            [flexGrow]="6"
+            [minWidth]="440"
+          >
             <ng-template let-skills="value" ngx-datatable-cell-template>
               <app-skill-badges [skills]="skills" />
             </ng-template>
           </ngx-datatable-column>
-          <ngx-datatable-column [sortable]="false" [resizeable]="false" [flexGrow]="1">
+          <ngx-datatable-column
+            [sortable]="false"
+            [resizeable]="false"
+            [flexGrow]="1"
+            [minWidth]="56"
+          >
             <ng-template ngx-datatable-header-template>
               <span class="visually-hidden">Actions</span>
             </ng-template>
@@ -70,6 +86,15 @@
             </ng-template>
           </ngx-datatable-column>
         </ngx-datatable>
+        @if (selected().length) {
+          <!-- second button after the table, so keyboard users need not tab back through all rows -->
+          <div class="d-flex align-items-center gap-4 mt-6">
+            <span>{{ selected().length }} selected</span>
+            <button type="button" class="btn btn-secondary" (click)="openAssign()">
+              Assign skill ({{ selected().length }})
+            </button>
+          </div>
+        }
       } @else if (filterActive()) {
         <si-empty-state
           icon="element-search"

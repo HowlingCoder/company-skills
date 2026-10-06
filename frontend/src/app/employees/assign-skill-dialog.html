@@ -32,17 +32,18 @@
     @if (skill(); as chosen) {
       <div class="d-flex align-items-center gap-4">
         <span>{{ skillLabel(chosen) }}</span>
-        <button type="button" class="btn btn-sm btn-tertiary" (click)="skill.set(undefined)">
+        <button type="button" class="btn btn-sm btn-tertiary" (click)="changeSkill()">
           Change
         </button>
       </div>
     } @else {
-      <app-skill-picker inputId="assign-skill-skill" (skillSelected)="skill.set($event)" />
+      <app-skill-picker inputId="assign-skill-skill" (skillSelected)="selectSkill($event)" />
     }
   </si-form-item>
 
   <si-form-item label="Level">
     <select
+      #levelSelect
       class="form-select"
       id="assign-skill-level"
       [ngModel]="level() ?? ''"

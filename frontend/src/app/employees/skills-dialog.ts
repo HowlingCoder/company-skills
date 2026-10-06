@@ -1,8 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
 import { SiFormItemComponent } from '@siemens/element-ng/form';
 import { SiInlineNotificationComponent } from '@siemens/element-ng/inline-notification';
 import { ModalRef } from '@siemens/element-ng/modal';
+import { SiToastNotificationService } from '@siemens/element-ng/toast-notification';
 import { EmployeeApi } from '../api/employee-api';
 import { Employee, Skill } from '../api/models';
 import { PROFICIENCY_LEVELS, skillLabel } from '../skills/levels';
@@ -29,6 +42,8 @@ interface SkillEntry {
 export class SkillsDialog {
   protected readonly modalRef = inject<ModalRef<SkillsDialog, string>>(ModalRef);
   private readonly employeeApi = inject(EmployeeApi);
+  private readonly toasts = inject(SiToastNotificationService);
+  private readonly injector = inject(Injector);
 
   readonly employee = input.required<Employee>();
 
@@ -46,6 +61,8 @@ export class SkillsDialog {
   );
   protected readonly saving = signal(false);
   protected readonly error = signal<string | undefined>(undefined);
+  private readonly picker = viewChild.required(SkillPicker);
+  private readonly removeButtons = viewChildren<ElementRef<HTMLButtonElement>>('removeButton');
 
   protected add(skill: Skill): void {
     if (this.assignedIds().includes(skill.id)) {
@@ -66,7 +83,21 @@ export class SkillsDialog {
   }
 
   protected remove(skillId: string): void {
+    const index = this.entries().findIndex((entry) => entry.skillId === skillId);
     this.entries.update((entries) => entries.filter((entry) => entry.skillId !== skillId));
+    // the clicked button is gone: go on with the row that took its place, else the one before
+    afterNextRender(
+      () => {
+        const buttons = this.removeButtons();
+        const next = buttons[Math.min(index, buttons.length - 1)];
+        if (next) {
+          next.nativeElement.focus();
+        } else {
+          this.picker().focus();
+        }
+      },
+      { injector: this.injector },
+    );
   }
 
   protected save(): void {
@@ -80,7 +111,15 @@ export class SkillsDialog {
       proficiency_level: entry.level as number,
     }));
     this.employeeApi.setSkills(this.employee().id, skills).subscribe({
-      next: () => this.modalRef.hide(SKILLS_SAVED),
+      next: () => {
+        const { firstname, lastname } = this.employee();
+        this.toasts.queueToastNotification(
+          'success',
+          'Skills saved',
+          `The skills of ${firstname} ${lastname} were updated.`,
+        );
+        this.modalRef.hide(SKILLS_SAVED);
+      },
       error: (error: unknown) => {
         this.saving.set(false);
         this.error.set(this.errorMessage(error));

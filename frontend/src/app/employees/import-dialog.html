@@ -34,8 +34,8 @@
     <si-inline-notification
       class="mt-6"
       severity="warning"
-      heading="Some rows were not imported"
-      message="Correct these rows and import the file again."
+      message="Correct the rows below and import the file again."
+      [heading]="partialImportHeading()"
     />
     <ul class="mt-4 mb-0" aria-label="Rows that were not imported">
       @for (error of rowErrors(); track error.line) {

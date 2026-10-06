@@ -1,11 +1,20 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { SI_FORM_ITEM_CONTROL, SiFormItemControl } from '@siemens/element-ng/form';
 import {
   SiTypeaheadDirective,
   TypeaheadMatch,
   TypeaheadOptionSource,
 } from '@siemens/element-ng/typeahead';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { Skill } from '../api/models';
 import { SkillApi } from '../api/skill-api';
 import { skillLabel } from './levels';
@@ -33,23 +42,33 @@ export class SkillPicker implements SiFormItemControl {
    * preselected then, so Enter only picks a suggestion the user moved to.
    */
   readonly allowFreeText = input(false);
+  /** Typed characters before suggestions open; 0 opens the list as soon as the input has focus. */
+  readonly minLength = input(0);
   readonly skillSelected = output<Skill>();
   readonly termEntered = output<string>();
+
+  private readonly inputElement = viewChild.required<ElementRef<HTMLInputElement>>('input');
+  /** The typed text matches nothing in the catalog. */
+  protected readonly noMatch = signal(false);
 
   // The backend searches name and alias; the label carries both, so the typeahead can
   // highlight the matching part
   protected readonly source: TypeaheadOptionSource = (search) =>
-    this.skillApi
-      .list(search)
-      .pipe(
-        map((skills) =>
-          skills
-            .filter((skill) => !this.excludedSkillIds().includes(skill.id))
-            .map((skill) => ({ skill, label: skillLabel(skill) })),
-        ),
-      );
+    this.skillApi.list(search).pipe(
+      tap((skills) => this.noMatch.set(search.trim() !== '' && !skills.length)),
+      map((skills) =>
+        skills
+          .filter((skill) => !this.excludedSkillIds().includes(skill.id))
+          .map((skill) => ({ skill, label: skillLabel(skill) })),
+      ),
+    );
+
+  focus(): void {
+    this.inputElement().nativeElement.focus();
+  }
 
   protected onSelect(match: TypeaheadMatch): void {
+    this.noMatch.set(false);
     this.skillSelected.emit((match.option as { skill: Skill }).skill);
   }
 

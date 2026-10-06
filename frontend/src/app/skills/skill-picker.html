@@ -8,7 +8,8 @@
   [placeholder]="placeholder()"
   [attr.aria-label]="ariaLabel()"
   [siTypeahead]="source"
-  [typeaheadMinLength]="0"
+  [typeaheadMinLength]="minLength()"
+  [typeaheadOptionsLimit]="0"
   [typeaheadAutoSelectIndex]="allowFreeText() ? -1 : 0"
   [typeaheadSkipSortingMatches]="true"
   [typeaheadWaitMs]="200"
@@ -17,3 +18,6 @@
   (typeaheadOnSelect)="onSelect($event)"
   (keydown.enter)="onEnter(input)"
 />
+@if (noMatch() && !allowFreeText()) {
+  <p class="text-secondary mt-2 mb-0" role="status">No matching skill in the catalog.</p>
+}

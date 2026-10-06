@@ -16,6 +16,7 @@
       placeholder="Skill, alias or wildcard (e.g. c*)"
       ariaLabel="Add a skill to the search"
       [allowFreeText]="true"
+      [minLength]="1"
       (skillSelected)="addSkill($event)"
       (termEntered)="addTerm($event)"
     />
