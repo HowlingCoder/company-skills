@@ -1,3 +1,6 @@
 spring:
   application:
     name: companyskills
+  jpa:
+    hibernate:
+      ddl-auto: validate
