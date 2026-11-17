@@ -116,6 +116,8 @@ public class Employee {
         this.updatedAt = updatedAt;
     }
 
-    public List<SkillAssignment> getSkillAssignments() {return this.skillAssignments;};
+    public List<SkillAssignment> getSkillAssignments() {
+        return this.skillAssignments;
+    }
 
 }

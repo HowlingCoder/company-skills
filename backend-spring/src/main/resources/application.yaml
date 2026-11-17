@@ -1,6 +1,20 @@
+server:
+  port: 8000
 spring:
   application:
     name: companyskills
+  datasource:
+    url: jdbc:postgresql://localhost:5433/skills_spring
+    username: skills
+    password: skills
   jpa:
     hibernate:
       ddl-auto: validate
+  jackson:
+    # The API and the Angular frontend use snake_case (skill_id, proficiency_level)
+    property-naming-strategy: SNAKE_CASE
+
+# Optional: seed the skill catalog from this CSV on startup (inserts only, safe to repeat), e.g.
+#   ./mvnw spring-boot:run -Dspring-boot.run.arguments=--skills.seed-file=../backend/data/skills.csv
+# skills:
+#   seed-file: ../backend/data/skills.csv
