@@ -29,5 +29,68 @@ services:
       db:
         condition: service_healthy
 
+  # --- Split variant: one backend and one frontend, started by name -----------
+  # Naming a service starts it (and its dependencies) without the "app" service above:
+  #   Python + Angular:  docker compose up --build api-python web-angular
+  #   Spring + Angular:  docker compose up --build api-spring web-angular
+  # Open http://localhost:8091 (WEB_PORT changes it). Start only one backend at a time.
+  # Both backends have the network alias "api", which the frontend forwards /api to.
+  # A React frontend will be added as another service.
+
+  api-python:
+    profiles: [python]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://skills:skills@db:5432/skills
+    networks:
+      default:
+        aliases: [api]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Alembic and Flyway each own their schema, so the Spring backend gets its own
+  # database in the same Postgres. A one-shot job creates it if it is missing
+  # (an init script would not run on an existing volume).
+  db-init-spring:
+    profiles: [spring]
+    image: postgres:18
+    environment:
+      PGPASSWORD: skills
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        psql -h db -U skills -d skills -tc "select 1 from pg_database where datname = 'skills_spring'" | grep -q 1
+        || psql -h db -U skills -d skills -c "create database skills_spring"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api-spring:
+    profiles: [spring]
+    build:
+      context: .
+      dockerfile: backend-spring/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/skills_spring
+      SPRING_DATASOURCE_USERNAME: skills
+      SPRING_DATASOURCE_PASSWORD: skills
+    networks:
+      default:
+        aliases: [api]
+    depends_on:
+      db-init-spring:
+        condition: service_completed_successfully
+
+  web-angular:
+    profiles: [angular]
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "${WEB_PORT:-8091}:8080"
+
 volumes:
   db-data:
