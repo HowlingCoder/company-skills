@@ -1,73 +1,54 @@
 # frontend-vue
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue variant of the frontend of the [Company Skill Management](../README.md) app. It
+rebuilds the Angular frontend in [`../frontend/`](../frontend/) with the same
+features: employee table, CSV import, skill assignment and skill search.
 
-## Recommended IDE Setup
+It talks to the API under `/api`, so it works with the Python and the Spring
+backend alike.
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Stack
 
-## Recommended Browser Setup
+Vue 3 (`<script setup lang="ts">`), TypeScript, Vite, Pinia, PrimeVue 5, Vitest,
+Playwright. PrimeVue is the only UI library.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## Run
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+Start a backend on http://localhost:8000 first, for example
+`cd ../backend; uv run uvicorn skill_management.main:app --reload`. The Vite dev
+server forwards `/api/*` to it with the prefix removed (see `vite.config.ts`).
 
 ```sh
 npm install
+npm run dev        # http://localhost:5173
 ```
 
-### Compile and Hot-Reload for Development
+With Docker, from the repository root (Open http://localhost:8091):
 
 ```sh
-npm run dev
+docker compose up --build api-python web-vue
 ```
 
-### Type-Check, Compile and Minify for Production
+## Checks
 
-```sh
-npm run build
+| Task       | Command                      |
+| ---------- | ---------------------------- |
+| Unit tests | `npm run test:unit -- --run` |
+| E2E tests  | `npm run test:e2e`           |
+| Build      | `npm run build`              |
+| Lint       | `npm run lint`               |
+| Format     | `npm run format`             |
+
+Node.js 22.18 or newer is required (see `engines` in `package.json`).
+
+## Layout
+
+```
+src/api/         Plain fetch calls and types for the /api endpoints
+src/stores/      Pinia stores
+src/employees/   Overview table, filter bar, dialogs
+src/skills/      Skill picker and skill badges
+src/theme/       Theme and color tokens
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
-
-```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
-npm run build
-
-# Runs the end-to-end tests
-npm run test:e2e
-# Runs the tests only on Chromium
-npm run test:e2e -- --project=chromium
-# Runs the tests of a specific file
-npm run test:e2e -- tests/example.spec.ts
-# Runs the tests in debug mode
-npm run test:e2e -- --debug
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+JSON field names from the API are snake_case (`skill_id`, `proficiency_level`).
