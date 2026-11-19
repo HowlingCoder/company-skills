@@ -166,6 +166,22 @@ see [.github/workflows/ci.yml](.github/workflows/ci.yml):
 A second workflow deploys the image to AWS. It is started by hand and never on a
 push, see [Deployment](#deployment).
 
+## Live demo
+
+| Backend | Frontend | Link                                   |
+| ------- | -------- | -------------------------------------- |
+| Python  | Angular  | https://skills-web-angular.onrender.com |
+| Python  | Vue      | https://skills-web-vue.onrender.com     |
+
+The first request can take about 1 minute (free tier: the backend sleeps after
+15 minutes without traffic). Demo data is reset daily at 03:00 UTC.
+
+The demo runs on Render (free tier) with a Neon database. Both frontends use the
+same Python backend and forward `/api` to it. The setup is described in
+[render.yaml](render.yaml); the daily reset is
+[.github/workflows/reset-demo.yml](.github/workflows/reset-demo.yml). The Spring
+backend and the React frontend are prepared there as commented blocks.
+
 ## Deployment
 
 The image ran on AWS ECS Fargate. I set the environment up once with the AWS CLI
