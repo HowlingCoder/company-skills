@@ -6,6 +6,18 @@ assign skills with a proficiency level and search employees by skill and level.
 Take-home assignment. Requirements, data model and the decisions behind them
 are documented in [NOTES.md](NOTES.md).
 
+<div align="center">
+
+### 🚀 Live demo
+
+[![Angular](https://img.shields.io/badge/Python_%2B_Angular-open_demo-dd0031?style=for-the-badge&logo=angular&logoColor=white)](https://skills-web-angular.onrender.com)
+[![Vue](https://img.shields.io/badge/Python_%2B_Vue-open_demo-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://skills-web-vue.onrender.com)
+
+⏳ The first request can take about 1 minute (free tier, the backend sleeps).<br>
+🔄 Demo data is reset daily at 03:00 UTC.
+
+</div>
+
 ![Employee overview with skill badges](docs/overview-light.png)
 
 ## Quick start
@@ -168,16 +180,8 @@ push, see [Deployment](#deployment).
 
 ## Live demo
 
-| Backend | Frontend | Link                                   |
-| ------- | -------- | -------------------------------------- |
-| Python  | Angular  | https://skills-web-angular.onrender.com |
-| Python  | Vue      | https://skills-web-vue.onrender.com     |
-
-The first request can take about 1 minute (free tier: the backend sleeps after
-15 minutes without traffic). Demo data is reset daily at 03:00 UTC.
-
-The demo runs on Render (free tier) with a Neon database. Both frontends use the
-same Python backend and forward `/api` to it. The setup is described in
+Hosted on Render (free tier) with a Neon database. Both frontends use the same
+Python backend and forward `/api` to it. The setup is described in
 [render.yaml](render.yaml); the daily reset is
 [.github/workflows/reset-demo.yml](.github/workflows/reset-demo.yml). The Spring
 backend and the React frontend are prepared there as commented blocks.
