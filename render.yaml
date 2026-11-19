@@ -1,0 +1,111 @@
+# Render Blueprint for the public demo (free tier, database at Neon).
+#
+# One backend service per backend, one static site per frontend. Every static site
+# forwards /api/* to its backend (a rewrite works as a proxy), so the browser only
+# talks to its own origin and no CORS setup is needed.
+#
+# The backends have no /api prefix: /api/employees -> <backend>/employees, the same
+# as frontend/nginx.conf. Replace the backend URL in the rewrites below with the real
+# one after the first deploy (Render may add a suffix to the service name).
+#
+# Secrets are never stored here: "sync: false" makes Render ask for the value.
+# Setup steps: README, section "Live demo".
+
+services:
+  # --- Python backend ---------------------------------------------------------
+  - type: web
+    name: skills-api-python
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      # Neon connection string with the SQLAlchemy driver prefix:
+      # postgresql+psycopg://USER:PASSWORD@HOST/skills?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      # backend/Dockerfile listens on 8000; Render would otherwise expect 10000
+      - key: PORT
+        value: "8000"
+
+  # --- Frontends for the Python backend --------------------------------------
+  - type: web
+    name: skills-web-angular
+    runtime: static
+    region: frankfurt
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/frontend/browser
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://skills-api-python.onrender.com/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: skills-web-vue
+    runtime: static
+    region: frankfurt
+    rootDir: frontend-vue
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://skills-api-python.onrender.com/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # --- Later: Spring backend + React frontend ---------------------------------
+  # Uncomment both blocks, add the Neon database "skills_spring" and point the
+  # rewrite to the Spring URL. The JVM flag keeps the heap under the 512 MB limit.
+  #
+  # - type: web
+  #   name: skills-api-spring
+  #   runtime: docker
+  #   plan: free
+  #   region: frankfurt
+  #   dockerfilePath: backend-spring/Dockerfile
+  #   dockerContext: .
+  #   healthCheckPath: /health
+  #   envVars:
+  #     # JDBC format: jdbc:postgresql://HOST/skills_spring?sslmode=require
+  #     - key: SPRING_DATASOURCE_URL
+  #       sync: false
+  #     - key: SPRING_DATASOURCE_USERNAME
+  #       sync: false
+  #     - key: SPRING_DATASOURCE_PASSWORD
+  #       sync: false
+  #     - key: PORT
+  #       value: "8000"
+  #     - key: JAVA_TOOL_OPTIONS
+  #       value: -Xmx300m
+  #
+  # - type: web
+  #   name: skills-web-react
+  #   runtime: static
+  #   region: frankfurt
+  #   rootDir: frontend-react
+  #   buildCommand: npm ci && npm run build
+  #   staticPublishPath: dist
+  #   envVars:
+  #     - key: NODE_VERSION
+  #       value: "24"
+  #   routes:
+  #     - type: rewrite
+  #       source: /api/*
+  #       destination: https://skills-api-spring.onrender.com/*
+  #     - type: rewrite
+  #       source: /*
+  #       destination: /index.html
