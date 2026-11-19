@@ -1,0 +1,38 @@
+name: Reset demo
+
+# The public demo has no login, so anyone can import employees. Once a day, remove
+# them and their skill assignments. The skill catalog stays: the backend seeds it
+# only on start, so it would stay empty until the next cold start.
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  reset:
+    name: Reset demo data
+    runs-on: ubuntu-latest
+    # The Neon URLs are environment secrets of the "demo" environment
+    environment: demo
+    env:
+      # Plain postgresql:// URLs (psql format), one per backend database
+      NEON_URL_PY: ${{ secrets.NEON_URL_PY }}
+      NEON_URL_SPRING: ${{ secrets.NEON_URL_SPRING }}
+    steps:
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Truncate employees and assignments
+        run: |
+          for name in NEON_URL_PY NEON_URL_SPRING; do
+            url="${!name}"
+            if [ -z "$url" ]; then
+              echo "$name is not set, skipping"
+              continue
+            fi
+            echo "Resetting $name"
+            psql "$url" -v ON_ERROR_STOP=1 \
+              -c "TRUNCATE skill_assignment, employee CASCADE;"
+          done
