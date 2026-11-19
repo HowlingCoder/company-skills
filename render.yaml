@@ -34,7 +34,6 @@ services:
   - type: web
     name: skills-web-angular
     runtime: static
-    region: frankfurt
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist/frontend/browser
@@ -52,7 +51,6 @@ services:
   - type: web
     name: skills-web-vue
     runtime: static
-    region: frankfurt
     rootDir: frontend-vue
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -95,7 +93,6 @@ services:
   # - type: web
   #   name: skills-web-react
   #   runtime: static
-  #   region: frankfurt
   #   rootDir: frontend-react
   #   buildCommand: npm ci && npm run build
   #   staticPublishPath: dist
