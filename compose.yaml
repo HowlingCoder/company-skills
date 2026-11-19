@@ -92,5 +92,13 @@ services:
     ports:
       - "${WEB_PORT:-8091}:8080"
 
+  web-vue:
+    profiles: [vue]
+    build:
+      context: .
+      dockerfile: frontend-vue/Dockerfile
+    ports:
+      - "${WEB_PORT:-8091}:8080"
+
 volumes:
   db-data:
