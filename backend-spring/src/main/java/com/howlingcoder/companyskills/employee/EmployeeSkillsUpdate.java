@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public record EmployeeSkillsUpdate(@NotNull @Valid List<@NotNull SkillLevel> skills) {
+public record EmployeeSkillsUpdate(@NotNull List<@NotNull @Valid SkillLevel> skills) {
 
     public record SkillLevel(
             @NotNull UUID skillId,
