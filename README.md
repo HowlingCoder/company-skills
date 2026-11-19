@@ -3,8 +3,14 @@
 Web app for team leads: import employees from a CSV file, see them in a table,
 assign skills with a proficiency level and search employees by skill and level.
 
-Take-home assignment. Requirements, data model and the decisions behind them
-are documented in [NOTES.md](NOTES.md).
+Built as a take-home assignment for a job application: the company gave four
+requirements (CSV import, employee table, skill assignment, skill search) and
+left the rest open. The requirements, the data model and the decisions behind
+them are in [NOTES.md](NOTES.md).
+
+The main implementation is Python + Angular. The same API and UI also exist as
+Vue and Spring variants (and a React frontend in progress), see
+[Other stacks](#other-stacks).
 
 <div align="center">
 
@@ -14,7 +20,8 @@ are documented in [NOTES.md](NOTES.md).
 [![Vue](https://img.shields.io/badge/Python_%2B_Vue-open_demo-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://skills-web-vue.onrender.com)
 
 ⏳ The first request can take about 1 minute (free tier, the backend sleeps).<br>
-🔄 Demo data is reset daily at 03:00 UTC.
+🔄 Demo data is reset daily at 03:00 UTC.<br>
+🔓 No login: please do not upload real personal data.
 
 </div>
 
@@ -41,7 +48,9 @@ starts empty, see [Try it](#try-it) below.
 
 ### Try it
 
-Who knows Kubernetes at an advanced level?
+Who knows Kubernetes at an advanced level? This works the same in the
+[live demo](https://skills-web-angular.onrender.com) and locally. You need the
+sample file `backend/data/employees.csv` from this repository.
 
 1. Click **Import CSV**, choose `backend/data/employees.csv` (12 sample
    employees) and click **Upload**.
@@ -96,6 +105,8 @@ gives no file format; this one is my assumption of a plain employee list.
 | Quality  | ruff, ESLint, Prettier, run as pre-commit hooks     |
 | Delivery | One Docker image: the API also serves the frontend  |
 
+Vue, Spring and React are covered under [Other stacks](#other-stacks).
+
 ## Project layout
 
 ```
@@ -109,9 +120,25 @@ frontend/                 Angular application
   src/app/employees/      Overview table, filter bar and the three dialogs
   src/app/skills/         Skill picker, levels, badge colors
   src/styles/             Theme and color tokens
+backend-spring/           Spring Boot variant of the API
+frontend-vue/             Vue variant of the frontend
+frontend-react/           React variant of the frontend (in progress)
 Dockerfile, compose.yaml  Image and local services
+render.yaml               Blueprint for the live demo
 NOTES.md                  Requirements, data model, decisions
 ```
+
+### Other stacks
+
+The backends serve the same API and the frontends talk to it under `/api`, so
+they can be combined. Compose starts one backend and one frontend by name:
+
+```sh
+docker compose up --build api-python web-vue   # or api-spring, web-angular, web-react
+```
+
+Open http://localhost:8091. Start only one backend and one frontend at a time.
+The live demo runs Python with Angular and with Vue.
 
 ## API
 
@@ -242,8 +269,8 @@ docker compose down -v
 Built spec-driven with Claude Code as a pair programmer. I wrote the
 requirements, data model and decisions down in [NOTES.md](NOTES.md) first; the
 agent implemented against that spec under the rules in [CLAUDE.md](CLAUDE.md):
-plan before editing, no commits, no test edits to make them pass. I reviewed and
-committed every change myself.
+plan before editing, no test edits to make them pass, commits only when I ask.
+I reviewed every change before it was committed.
 
 ## Scope
 
