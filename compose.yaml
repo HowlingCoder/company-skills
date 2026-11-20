@@ -31,11 +31,13 @@ services:
 
   # --- Split variant: one backend and one frontend, started by name -----------
   # Naming a service starts it (and its dependencies) without the "app" service above:
-  #   Python + Angular:  docker compose up --build api-python web-angular
-  #   Spring + Angular:  docker compose up --build api-spring web-angular
-  # Open http://localhost:8091 (WEB_PORT changes it). Start only one backend at a time.
+  #   docker compose up --build <backend> <frontend>
+  #   backend:  api-python | api-spring
+  #   frontend: web-angular | web-react | web-vue
+  #   e.g.      docker compose up --build api-spring web-vue
+  # Open http://localhost:8091 (WEB_PORT changes it).
+  # Start only one backend and one frontend at a time.
   # Both backends have the network alias "api", which the frontend forwards /api to.
-  # A React frontend will be added as another service.
 
   api-python:
     profiles: [python]
@@ -89,6 +91,14 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    ports:
+      - "${WEB_PORT:-8091}:8080"
+
+  web-react:
+    profiles: [react]
+    build:
+      context: .
+      dockerfile: frontend-react/Dockerfile
     ports:
       - "${WEB_PORT:-8091}:8080"
 

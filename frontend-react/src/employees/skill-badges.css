@@ -1,0 +1,78 @@
+/*
+ * Skill badges (SkillBadge.tsx). Every skill has its own hue (--skill-hue, from its name);
+ * the level sets lightness and chroma (OKLCH keeps the lightness comparable across hues, so
+ * the dark text keeps a contrast above 4.5:1). Global because the badges are also rendered
+ * in the popover, which lives in a portal outside the table.
+ */
+:root {
+  --skill-badge-text: oklch(22% 0.02 260);
+  --skill-badge-l-1: 94%;
+  --skill-badge-c-1: 0.035;
+  --skill-badge-l-2: 89%;
+  --skill-badge-c-2: 0.065;
+  --skill-badge-l-3: 84%;
+  --skill-badge-c-3: 0.095;
+  --skill-badge-l-4: 79%;
+  --skill-badge-c-4: 0.12;
+  --skill-badge-l-5: 74%;
+  --skill-badge-c-5: 0.145;
+}
+
+/* bright, saturated colors with dark text: they stand out on dark surfaces */
+:root[data-mantine-color-scheme="dark"] {
+  --skill-badge-l-1: 62%;
+  --skill-badge-c-1: 0.06;
+  --skill-badge-l-2: 68%;
+  --skill-badge-c-2: 0.1;
+  --skill-badge-l-3: 74%;
+  --skill-badge-c-3: 0.14;
+  --skill-badge-l-4: 79%;
+  --skill-badge-c-4: 0.17;
+  --skill-badge-l-5: 84%;
+  --skill-badge-c-5: 0.2;
+}
+
+/* two classes, so these rules win over Mantine's single-class badge styles */
+.skill-badge.skill-badge {
+  color: var(--skill-badge-text);
+  border: 0;
+}
+.skill-badge.skill-level-1 {
+  background: oklch(
+    var(--skill-badge-l-1) var(--skill-badge-c-1) var(--skill-hue)
+  );
+}
+.skill-badge.skill-level-2 {
+  background: oklch(
+    var(--skill-badge-l-2) var(--skill-badge-c-2) var(--skill-hue)
+  );
+}
+.skill-badge.skill-level-3 {
+  background: oklch(
+    var(--skill-badge-l-3) var(--skill-badge-c-3) var(--skill-hue)
+  );
+}
+.skill-badge.skill-level-4 {
+  background: oklch(
+    var(--skill-badge-l-4) var(--skill-badge-c-4) var(--skill-hue)
+  );
+}
+.skill-badge.skill-level-5 {
+  background: oklch(
+    var(--skill-badge-l-5) var(--skill-badge-c-5) var(--skill-hue)
+  );
+}
+
+/*
+ * Active search: matching skills keep their fill and come first; the others are only outlined
+ * in their color. Filled versus outlined is a difference in shape, not only in color.
+ */
+.skill-badge.skill-unmatched {
+  background: transparent;
+  color: var(--mantine-color-text);
+  box-shadow: inset 0 0 0 1px
+    oklch(var(--skill-badge-l-4) var(--skill-badge-c-4) var(--skill-hue));
+}
+.skill-badge.skill-matched + .skill-badge.skill-unmatched {
+  margin-inline-start: 0.75rem;
+}

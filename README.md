@@ -9,7 +9,7 @@ left the rest open. The requirements, the data model and the decisions behind
 them are in [NOTES.md](NOTES.md).
 
 The main implementation is Python + Angular. The same API and UI also exist as
-Vue and Spring variants (and a React frontend in progress), see
+Vue, React and Spring variants, see
 [Other stacks](#other-stacks).
 
 <div align="center">
@@ -122,7 +122,7 @@ frontend/                 Angular application
   src/styles/             Theme and color tokens
 backend-spring/           Spring Boot variant of the API
 frontend-vue/             Vue variant of the frontend
-frontend-react/           React variant of the frontend (in progress)
+frontend-react/           React variant of the frontend
 Dockerfile, compose.yaml  Image and local services
 render.yaml               Blueprint for the live demo
 NOTES.md                  Requirements, data model, decisions
