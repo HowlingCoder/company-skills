@@ -4,8 +4,8 @@ React variant of the frontend of the [Company Skill Management](../README.md) ap
 
 It has the same features as the Angular frontend in [`../frontend/`](../frontend/):
 employee table with row selection, search by name, skills and level (kept in the URL),
-CSV import, editing the skills of one employee and assigning a skill to many. It is
-not part of the live demo.
+CSV import, editing the skills of one employee and assigning a skill to many. It runs in
+the live demo together with the Spring backend.
 
 It talks to the API under `/api`, so it will work with the Python and the Spring
 backend alike.
