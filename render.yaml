@@ -65,44 +65,45 @@ services:
         source: /*
         destination: /index.html
 
-  # --- Later: Spring backend + React frontend ---------------------------------
-  # Uncomment both blocks, add the Neon database "skills_spring" and point the
-  # rewrite to the Spring URL. The JVM flag keeps the heap under the 512 MB limit.
-  #
-  # - type: web
-  #   name: skills-api-spring
-  #   runtime: docker
-  #   plan: free
-  #   region: frankfurt
-  #   dockerfilePath: backend-spring/Dockerfile
-  #   dockerContext: .
-  #   healthCheckPath: /health
-  #   envVars:
-  #     # JDBC format: jdbc:postgresql://HOST/skills_spring?sslmode=require
-  #     - key: SPRING_DATASOURCE_URL
-  #       sync: false
-  #     - key: SPRING_DATASOURCE_USERNAME
-  #       sync: false
-  #     - key: SPRING_DATASOURCE_PASSWORD
-  #       sync: false
-  #     - key: PORT
-  #       value: "8000"
-  #     - key: JAVA_TOOL_OPTIONS
-  #       value: -Xmx300m
-  #
-  # - type: web
-  #   name: skills-web-react
-  #   runtime: static
-  #   rootDir: frontend-react
-  #   buildCommand: npm ci && npm run build
-  #   staticPublishPath: dist
-  #   envVars:
-  #     - key: NODE_VERSION
-  #       value: "24"
-  #   routes:
-  #     - type: rewrite
-  #       source: /api/*
-  #       destination: https://skills-api-spring.onrender.com/*
-  #     - type: rewrite
-  #       source: /*
-  #       destination: /index.html
+  # --- Spring backend + React frontend ----------------------------------------
+  # Own Neon database "skills_spring": Flyway and Alembic each own their schema.
+  # The JVM flags keep the memory under the 512 MB limit of the free plan.
+  - type: web
+    name: skills-api-spring
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: backend-spring/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      # JDBC format, user and password separate:
+      # jdbc:postgresql://HOST/skills_spring?sslmode=require
+      # Use the direct host (without "-pooler"): Flyway locks the schema per session.
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: PORT
+        value: "8000"
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx300m
+
+  - type: web
+    name: skills-web-react
+    runtime: static
+    rootDir: frontend-react
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://skills-api-spring.onrender.com/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
