@@ -30,7 +30,7 @@ describe('App', () => {
   it('renders the application name in the header', () => {
     const wrapper = mountApp()
 
-    expect(wrapper.find('header h1').text()).toBe('Company Skill Management')
+    expect(wrapper.find('header h1').text()).toBe('Company Skill Management (Vue)')
   })
 
   it('shows the employee overview', async () => {

@@ -9,7 +9,7 @@ const { isDark, toggle } = useThemeMode()
 
 <template>
   <header class="app-header">
-    <h1>Company Skill Management</h1>
+    <h1>Company Skill Management (Vue)</h1>
     <Button
       :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
       :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"

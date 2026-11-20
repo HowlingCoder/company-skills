@@ -35,7 +35,7 @@ test('lists the employees and selects rows for a bulk assignment', async ({ page
   await answerEmployees(page, employees)
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: 'Company Skill Management' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Company Skill Management (Vue)' })).toBeVisible()
   const rows = page.locator('tbody tr[data-p-index]')
   await expect(rows).toHaveCount(2)
   await expect(rows.first()).toContainText('Max Muster')
