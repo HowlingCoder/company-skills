@@ -57,6 +57,10 @@ describe('EmployeeOverview', () => {
     vi.mocked(listEmployees).mockReset()
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('shows a spinner while the employees are loading', async () => {
     let answer!: (body: Employee[]) => void
     vi.mocked(listEmployees).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
@@ -71,6 +75,25 @@ describe('EmployeeOverview', () => {
     answer([])
     await flushPromises()
     expect(wrapper.find('[aria-label="Loading employees"]').exists()).toBe(false)
+  })
+
+  it('explains the wait when the first load takes longer than 3 seconds', async () => {
+    vi.useFakeTimers()
+    let answer!: (body: Employee[]) => void
+    vi.mocked(listEmployees).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
+    wrapper = mount(EmployeeOverview, {
+      global: { plugins: [createPinia(), [PrimeVue, { theme: 'none' }]] },
+    })
+    const hint = () => wrapper.find('.spinner p[role="status"]')
+
+    await vi.advanceTimersByTimeAsync(2_900)
+    expect(hint().exists()).toBe(false)
+    await vi.advanceTimersByTimeAsync(200)
+    expect(hint().text()).toContain('This can take about a minute')
+
+    answer([])
+    await flushPromises()
+    expect(hint().exists()).toBe(false)
   })
 
   it('loads the employees once when it is shown', async () => {

@@ -5,8 +5,9 @@ import DataTable from 'primevue/datatable'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { type Employee } from '@/api/models'
+import { SLOW_START_HINT_MS } from '@/api/wake-up'
 import { useEmployeesStore } from '@/stores/employees'
 import AssignSkillDialog from './AssignSkillDialog.vue'
 import EmployeeFilters from './EmployeeFilters.vue'
@@ -29,6 +30,11 @@ const { employees, status, loading } = storeToRefs(store)
 const filter = useUrlFilter()
 const filterActive = computed(() => isFilterActive(filter.value))
 const noMatchText = computed(() => noMatchTextFor(filter.value))
+
+/** The first load takes long: the free-tier backend of the demo is probably starting. */
+const slowStart = ref(false)
+const slowStartTimer = setTimeout(() => (slowStart.value = true), SLOW_START_HINT_MS)
+onUnmounted(() => clearTimeout(slowStartTimer))
 
 const selected = ref<Employee[]>([])
 const selectedCount = computed(() => selected.value.length)
@@ -88,6 +94,9 @@ function onSkillAssigned(): void {
 
     <div v-if="status === 'loading'" class="spinner">
       <ProgressSpinner aria-label="Loading employees" />
+      <p v-if="slowStart" role="status">
+        The demo runs on a free tier: the server is waking up. This can take about a minute.
+      </p>
     </div>
 
     <Message v-else-if="status === 'error'" severity="error">
@@ -200,8 +209,11 @@ function onSkillAssigned(): void {
 
 .spinner {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   padding: 2rem;
+  color: var(--p-text-muted-color);
 }
 
 .empty-state {

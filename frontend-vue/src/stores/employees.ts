@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { listEmployees } from '@/api/employee-api'
 import { type Employee, type EmployeeFilter } from '@/api/models'
+import { retryWhileWakingUp } from '@/api/wake-up'
 
 /** 'loading' only until the first answer; later loads keep the table and set `loading`. */
 export type LoadStatus = 'loading' | 'loaded' | 'error'
@@ -21,7 +22,14 @@ export const useEmployeesStore = defineStore('employees', {
       const request = ++latestRequest
       this.loading = true
       try {
-        const employees = await listEmployees(filter)
+        // Only the first load waits for a sleeping backend; later errors show at once
+        const employees =
+          this.status === 'loading'
+            ? await retryWhileWakingUp(
+                () => listEmployees(filter),
+                () => request === latestRequest,
+              )
+            : await listEmployees(filter)
         if (request !== latestRequest) return
         this.employees = employees
         this.status = 'loaded'

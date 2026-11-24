@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { listEmployees } from '@/api/employee-api'
+import { HttpError } from '@/api/http'
 import { employees } from '@/__tests__/fixtures'
 import { useEmployeesStore } from '../employees'
 
@@ -21,6 +22,10 @@ describe('employees store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.mocked(listEmployees).mockReset()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('starts in the loading state without employees', () => {
@@ -126,5 +131,21 @@ describe('employees store with a filter', () => {
     await first
 
     expect(store.status).toBe('loaded')
+  })
+
+  it('waits for a sleeping backend on the first load only', async () => {
+    vi.useFakeTimers()
+    const badGateway = new HttpError('GET /api/employees failed: 502', 502, undefined)
+    vi.mocked(listEmployees).mockRejectedValueOnce(badGateway).mockResolvedValueOnce(employees)
+    const store = useEmployeesStore()
+
+    const first = store.load()
+    await vi.advanceTimersByTimeAsync(5_000)
+    await first
+    expect(store.status).toBe('loaded')
+
+    vi.mocked(listEmployees).mockRejectedValueOnce(badGateway)
+    await store.load()
+    expect(listEmployees).toHaveBeenCalledTimes(3)
   })
 })
