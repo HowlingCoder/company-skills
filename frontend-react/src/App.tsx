@@ -31,8 +31,10 @@ function App() {
   return (
     <AppShell header={{ height: 60 }} padding="md">
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Title order={3}>Company Skill Management (React)</Title>
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <Title order={3} fz={{ base: "md", sm: "h3" }} miw={0} lineClamp={1}>
+            Company Skill Management (React)
+          </Title>
           <ThemeToggle />
         </Group>
       </AppShell.Header>

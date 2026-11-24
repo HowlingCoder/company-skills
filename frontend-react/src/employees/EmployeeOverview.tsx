@@ -1,19 +1,20 @@
 import {
   ActionIcon,
   Button,
-  Center,
   Checkbox,
   Group,
   Loader,
+  Stack,
   Table,
   Text,
   Title,
   VisuallyHidden,
 } from "@mantine/core";
 import { IconEdit, IconSearch, IconUsers } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UNEXPECTED_ERROR } from "../api/http";
 import type { Employee } from "../api/models";
+import { SLOW_START_HINT_MS } from "../api/wake-up";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorAlert } from "../components/ErrorAlert";
 import { AssignSkillDialog } from "./AssignSkillDialog";
@@ -53,6 +54,13 @@ export function EmployeeOverview() {
 
   const { data, status, refetch } = useEmployees(filter);
 
+  // the first load takes long: the free-tier backend of the demo is probably starting
+  const [slowStart, setSlowStart] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSlowStart(true), SLOW_START_HINT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
   const employees = data ?? [];
   const selectedEmployees = employees.filter((e) => selectedIds.has(e.id));
   const selectedCount = selectedEmployees.length;
@@ -71,9 +79,15 @@ export function EmployeeOverview() {
 
   if (status === "pending") {
     return (
-      <Center py="xl">
+      <Stack align="center" py="xl">
         <Loader aria-label="Loading employees" />
-      </Center>
+        {slowStart && (
+          <Text c="dimmed" ta="center" role="status">
+            The demo runs on a free tier: the server is waking up. This can take
+            about a minute.
+          </Text>
+        )}
+      </Stack>
     );
   }
 

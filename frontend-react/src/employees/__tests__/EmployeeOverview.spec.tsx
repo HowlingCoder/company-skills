@@ -1,7 +1,8 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { listEmployees } from "../../api/employee-api";
+import { HttpError } from "../../api/http";
 import { listSkills } from "../../api/skill-api";
 import { bulkAssign } from "../../api/skill-assignment-api";
 import { pickLevel, pickSkill } from "../../test/dialogs";
@@ -121,6 +122,68 @@ describe("EmployeeOverview", () => {
 
     await waitFor(() => expect(rows()).toHaveLength(2));
     expect(screen.queryByText("Employees could not be loaded")).toBeNull();
+  });
+
+  describe("while the free-tier backend of the demo is starting", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const hint = () => screen.queryByText(/This can take about a minute/);
+
+    const badGateway = () =>
+      new HttpError("GET /api/employees failed: 502", 502, undefined);
+
+    it("explains the wait when the first load takes longer than 3 seconds", async () => {
+      let answer!: (body: Employee[]) => void;
+      vi.mocked(listEmployees).mockReturnValueOnce(
+        new Promise((resolve) => (answer = resolve)),
+      );
+      renderWithProviders(<EmployeeOverview />);
+
+      await act(() => vi.advanceTimersByTimeAsync(2_900));
+      expect(hint()).toBeNull();
+      await act(() => vi.advanceTimersByTimeAsync(200));
+      expect(hint()).toHaveAttribute("role", "status");
+
+      await act(async () => answer(employees));
+      await waitFor(() => expect(hint()).toBeNull());
+    });
+
+    it("retries every 5 seconds on a gateway error and shows the table once the backend answers", async () => {
+      vi.mocked(listEmployees)
+        .mockRejectedValueOnce(badGateway())
+        .mockRejectedValueOnce(badGateway())
+        .mockResolvedValueOnce(employees);
+      renderWithProviders(<EmployeeOverview />);
+
+      await act(() => vi.advanceTimersByTimeAsync(4_900));
+      expect(listEmployees).toHaveBeenCalledTimes(1);
+      await act(() => vi.advanceTimersByTimeAsync(5_200));
+
+      expect(listEmployees).toHaveBeenCalledTimes(3);
+      await waitFor(() => expect(rows()).toHaveLength(2));
+      expect(screen.queryByText("Employees could not be loaded")).toBeNull();
+    });
+
+    it("gives up after 2 minutes and shows the error with the retry action", async () => {
+      vi.mocked(listEmployees).mockRejectedValue(badGateway());
+      renderWithProviders(<EmployeeOverview />);
+
+      await act(() => vi.advanceTimersByTimeAsync(115_100));
+      expect(screen.queryByText("Employees could not be loaded")).toBeNull();
+      await act(() => vi.advanceTimersByTimeAsync(5_000));
+
+      expect(listEmployees).toHaveBeenCalledTimes(25);
+      expect(
+        screen.getByText("Employees could not be loaded"),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    });
   });
 
   it("names the skills button of every row after the employee", async () => {
