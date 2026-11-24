@@ -17,7 +17,7 @@ Vue, React, Spring and .NET variants, see
 ### 🚀 Live demo
 
 [![Angular](https://img.shields.io/badge/Python_%2B_Angular-open_demo-dd0031?style=for-the-badge&logo=angular&logoColor=white)](https://skills-web-angular.onrender.com)
-[![Vue](https://img.shields.io/badge/Python_%2B_Vue-open_demo-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://skills-web-vue.onrender.com)
+[![Vue](https://img.shields.io/badge/.NET_%2B_Vue-open_demo-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://skills-web-vue.onrender.com)
 [![React](https://img.shields.io/badge/Spring_%2B_React-open_demo-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://skills-web-react.onrender.com)
 
 ⏳ The first request can take about 1 minute (free tier, the backend sleeps).<br>
@@ -140,7 +140,7 @@ docker compose up --build api-python web-vue   # or api-spring, api-dotnet, web-
 ```
 
 Open http://localhost:8091. Start only one backend and one frontend at a time.
-The live demo runs Python with Angular, Python with Vue and Spring with React.
+The live demo runs Python with Angular, Spring with React and .NET with Vue.
 
 ## API
 
@@ -211,8 +211,9 @@ push, see [Deployment](#deployment).
 
 ## Live demo
 
-Hosted on Render (free tier) with Neon databases. Angular and Vue share the
-Python backend, React uses the Spring backend; each backend has its own database.
+Hosted on Render (free tier) with Neon databases. Angular uses the Python
+backend, React the Spring backend and Vue the .NET backend; each backend has its
+own database.
 Every frontend forwards `/api` to its backend. The setup is described in
 [render.yaml](render.yaml); the daily reset is
 [.github/workflows/reset-demo.yml](.github/workflows/reset-demo.yml).

@@ -30,7 +30,7 @@ services:
       - key: PORT
         value: "8000"
 
-  # --- Frontends for the Python backend --------------------------------------
+  # --- Frontend for the Python backend ---------------------------------------
   - type: web
     name: skills-web-angular
     runtime: static
@@ -48,6 +48,7 @@ services:
         source: /*
         destination: /index.html
 
+  # Vue uses the .NET backend (defined at the end)
   - type: web
     name: skills-web-vue
     runtime: static
@@ -60,7 +61,7 @@ services:
     routes:
       - type: rewrite
         source: /api/*
-        destination: https://skills-api-python.onrender.com/*
+        destination: https://skills-api-dotnet.onrender.com/*
       - type: rewrite
         source: /*
         destination: /index.html
@@ -110,7 +111,7 @@ services:
 
   # --- .NET backend -------------------------------------------------------------
   # Own Neon database "skills_dotnet". Migrations and the skill seed run on start.
-  # No frontend points at it yet: change a rewrite destination below or add a site.
+  # The Vue site above forwards /api to it.
   - type: web
     name: skills-api-dotnet
     runtime: docker
