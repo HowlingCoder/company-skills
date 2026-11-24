@@ -124,6 +124,88 @@ describe('EmployeeOverview', () => {
     expect(element.querySelectorAll('datatable-body-row')).toHaveLength(2);
   });
 
+  describe('while the free-tier backend of the demo is starting', () => {
+    beforeEach(() => {
+      // The component starts its timers on creation: recreate it under fake timers
+      vi.useFakeTimers();
+      fixture.destroy();
+      fixture = TestBed.createComponent(EmployeeOverview);
+      element = fixture.nativeElement;
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function hint(): string | undefined {
+      return element.querySelector('[role="status"]')?.textContent?.trim();
+    }
+
+    /** The request of the destroyed first component is cancelled; only the open one counts. */
+    function openRequests() {
+      return http.match('/api/employees').filter((req) => !req.cancelled);
+    }
+
+    function answerWakingUp(status = 502): void {
+      openRequests().forEach((req) => req.flush('', { status, statusText: 'Bad Gateway' }));
+    }
+
+    function answer(body: Employee[]): void {
+      const requests = openRequests();
+      expect(requests).toHaveLength(1);
+      requests[0].flush(body);
+    }
+
+    it('explains the wait when the first load takes longer than 3 seconds', async () => {
+      await vi.advanceTimersByTimeAsync(2_900);
+      fixture.detectChanges();
+      expect(hint()).toBeUndefined();
+
+      await vi.advanceTimersByTimeAsync(200);
+      fixture.detectChanges();
+      expect(hint()).toContain('This can take about a minute');
+
+      answer(employees);
+      fixture.detectChanges();
+      expect(hint()).toBeUndefined();
+    });
+
+    it('retries every 5 seconds on a gateway error and shows the table once the backend answers', async () => {
+      answerWakingUp(502);
+      await vi.advanceTimersByTimeAsync(5_000);
+      answerWakingUp(503);
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      answer(employees);
+      fixture.detectChanges();
+
+      expect(element.querySelector('si-inline-notification')).toBeNull();
+      expect(element.querySelectorAll('datatable-body-row')).toHaveLength(2);
+    });
+
+    it('gives up after 2 minutes and shows the error with the retry action', async () => {
+      for (let waited = 0; waited < 115_000; waited += 5_000) {
+        answerWakingUp(504);
+        await vi.advanceTimersByTimeAsync(5_000);
+      }
+      fixture.detectChanges();
+      expect(element.querySelector('si-inline-notification')).toBeNull();
+      // match() takes the requests out of the controller, so answer the ones it returned
+      const stillTrying = openRequests();
+      expect(stillTrying).toHaveLength(1);
+
+      stillTrying[0].flush('', { status: 504, statusText: 'Gateway Timeout' });
+      await vi.advanceTimersByTimeAsync(5_000);
+      answerWakingUp(504);
+      fixture.detectChanges();
+
+      expect(openRequests()).toHaveLength(0);
+      expect(element.querySelector('si-inline-notification')?.textContent).toContain(
+        'Employees could not be loaded',
+      );
+    });
+  });
+
   function importButtons(): HTMLButtonElement[] {
     return Array.from(element.querySelectorAll('button')).filter(
       (button) => button.textContent?.trim() === 'Import CSV',

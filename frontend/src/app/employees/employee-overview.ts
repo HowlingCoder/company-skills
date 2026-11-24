@@ -17,9 +17,11 @@ import {
   of,
   switchMap,
   tap,
+  timer,
 } from 'rxjs';
 import { EmployeeApi } from '../api/employee-api';
 import { Employee } from '../api/models';
+import { SLOW_START_HINT_MS, retryWhileWakingUp } from '../api/wake-up';
 import { AssignSkillDialog, SKILL_ASSIGNED } from './assign-skill-dialog';
 import {
   ActiveFilter,
@@ -65,6 +67,8 @@ export class EmployeeOverview {
   /** 'loading' only until the first answer; later searches keep the table and set `loading`. */
   protected readonly state = signal<'loading' | 'loaded' | 'error'>('loading');
   protected readonly loading = signal(true);
+  /** The first load takes long: the free-tier backend of the demo is probably starting. */
+  protected readonly slowStart = signal(false);
   private readonly reload = new BehaviorSubject<void>(undefined);
   protected readonly employees = signal<Employee[]>([]);
   // name is a single sortable column, so the rows carry the full name
@@ -100,9 +104,13 @@ export class EmployeeOverview {
           this.selected.set([]);
         }),
         // switchMap drops the answer of an older search when a newer one is under way
-        switchMap(([activeFilter]) =>
-          this.employeeApi.list(toApiFilter(activeFilter)).pipe(catchError(() => of(null))),
-        ),
+        switchMap(([activeFilter]) => {
+          const request = this.employeeApi.list(toApiFilter(activeFilter));
+          // Only the first load waits for a sleeping backend; later errors show at once
+          return (this.state() === 'loading' ? request.pipe(retryWhileWakingUp()) : request).pipe(
+            catchError(() => of(null)),
+          );
+        }),
         takeUntilDestroyed(),
       )
       .subscribe((employees) => {
@@ -115,6 +123,10 @@ export class EmployeeOverview {
         }
       });
   }
+
+  private readonly slowStartTimer = timer(SLOW_START_HINT_MS)
+    .pipe(takeUntilDestroyed())
+    .subscribe(() => this.slowStart.set(true));
 
   protected load(): void {
     this.reload.next();

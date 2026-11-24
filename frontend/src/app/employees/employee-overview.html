@@ -20,6 +20,11 @@
   @switch (state()) {
     @case ('loading') {
       <si-loading-spinner />
+      @if (slowStart()) {
+        <p class="text-secondary text-center mt-6" role="status">
+          The demo runs on a free tier: the server is waking up. This can take about a minute.
+        </p>
+      }
     }
     @case ('error') {
       <si-inline-notification
