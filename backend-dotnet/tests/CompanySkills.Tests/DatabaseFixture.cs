@@ -1,4 +1,7 @@
+using System.Text.Json;
 using CompanySkills.Data;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
@@ -14,14 +17,29 @@ public class DatabaseFixture : IAsyncLifetime
 
     public string ConnectionString => _container.GetConnectionString();
 
+    /// <summary>The JSON settings of the API, for reading responses into the app's records.</summary>
+    public JsonSerializerOptions ApiJsonOptions { get; } = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    };
+
+    /// <summary>The app, pointed at the test database.</summary>
+    public WebApplicationFactory<Program> Api { get; private set; } = null!;
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
         await using var db = CreateContext();
         await db.Database.MigrateAsync();
+        Api = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            builder.UseSetting("ConnectionStrings:Default", ConnectionString));
     }
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    public async Task DisposeAsync()
+    {
+        await Api.DisposeAsync();
+        await _container.DisposeAsync();
+    }
 
     public AppDbContext CreateContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(ConnectionString).Options);

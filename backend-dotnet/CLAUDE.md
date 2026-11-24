@@ -38,3 +38,8 @@ xUnit, `WebApplicationFactory`.
 | Run   | `dotnet run --project src/CompanySkills`     |
 | Tests | `dotnet test`                                |
 | Format | `dotnet format`                             |
+| Migrate | `dotnet ef database update --project src/CompanySkills` (creates `skills_dotnet` in the compose db) |
+| Seed  | `dotnet run --project src/CompanySkills -- --Skills:SeedFile=../backend/data/skills.csv` |
+
+Tests need Docker (Testcontainers starts Postgres 18). API tests empty the tables
+before each test (`IntegrationTest`); model tests roll back (`DatabaseTest`).
