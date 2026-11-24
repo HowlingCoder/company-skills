@@ -107,3 +107,22 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
+  # --- .NET backend -------------------------------------------------------------
+  # Own Neon database "skills_dotnet". Migrations and the skill seed run on start.
+  # No frontend points at it yet: change a rewrite destination below or add a site.
+  - type: web
+    name: skills-api-dotnet
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: backend-dotnet/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      # Npgsql format, use the direct host (without "-pooler") for the migrations:
+      # Host=HOST;Database=skills_dotnet;Username=USER;Password=PASSWORD;SSL Mode=Require
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: PORT
+        value: "8000"

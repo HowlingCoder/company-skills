@@ -8,3 +8,5 @@
 **/.ruff_cache
 **/.env
 **/target
+**/bin
+**/obj

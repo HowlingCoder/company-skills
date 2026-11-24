@@ -39,6 +39,13 @@ app.MapEmployeeImportEndpoints();
 app.MapEmployeeSkillsEndpoints();
 app.MapSkillAssignmentEndpoints();
 
+// Optional: apply the migrations on startup (the Docker image does), creates the database if missing
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+}
+
 // Optional: seed the skill catalog on startup (inserts only, safe to repeat), e.g.
 //   dotnet run --project src/CompanySkills -- --Skills:SeedFile=../backend/data/skills.csv
 if (app.Configuration["Skills:SeedFile"] is { Length: > 0 } seedFile)

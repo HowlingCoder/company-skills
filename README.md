@@ -9,7 +9,7 @@ left the rest open. The requirements, the data model and the decisions behind
 them are in [NOTES.md](NOTES.md).
 
 The main implementation is Python + Angular. The same API and UI also exist as
-Vue, React and Spring variants, see
+Vue, React, Spring and .NET variants, see
 [Other stacks](#other-stacks).
 
 <div align="center">
@@ -106,7 +106,7 @@ gives no file format; this one is my assumption of a plain employee list.
 | Quality  | ruff, ESLint, Prettier, run as pre-commit hooks     |
 | Delivery | One Docker image: the API also serves the frontend  |
 
-Vue, Spring and React are covered under [Other stacks](#other-stacks).
+Vue, React, Spring and .NET are covered under [Other stacks](#other-stacks).
 
 ## Project layout
 
@@ -122,6 +122,7 @@ frontend/                 Angular application
   src/app/skills/         Skill picker, levels, badge colors
   src/styles/             Theme and color tokens
 backend-spring/           Spring Boot variant of the API
+backend-dotnet/           ASP.NET Core variant of the API
 frontend-vue/             Vue variant of the frontend
 frontend-react/           React variant of the frontend
 Dockerfile, compose.yaml  Image and local services
@@ -135,7 +136,7 @@ The backends serve the same API and the frontends talk to it under `/api`, so
 they can be combined. Compose starts one backend and one frontend by name:
 
 ```sh
-docker compose up --build api-python web-vue   # or api-spring, web-angular, web-react
+docker compose up --build api-python web-vue   # or api-spring, api-dotnet, web-angular, web-react
 ```
 
 Open http://localhost:8091. Start only one backend and one frontend at a time.
@@ -195,10 +196,11 @@ Install the hooks once per clone with `uvx pre-commit install`.
 
 ### Continuous integration
 
-GitHub Actions runs four jobs on every push to `main` and on pull requests,
+GitHub Actions runs five jobs on every push to `main` and on pull requests,
 see [.github/workflows/ci.yml](.github/workflows/ci.yml):
 
 - **Backend:** ruff lint and format check, pytest against PostgreSQL
+- **Backend .NET:** `dotnet format` check, xUnit tests against PostgreSQL (Testcontainers)
 - **Frontend Angular:** ESLint, Prettier check, Vitest and a production build
 - **Frontend React:** ESLint, Vitest and a production build
 - **Docker image:** builds the image, starts it with Compose and checks that the

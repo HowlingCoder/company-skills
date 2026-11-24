@@ -32,7 +32,7 @@ services:
   # --- Split variant: one backend and one frontend, started by name -----------
   # Naming a service starts it (and its dependencies) without the "app" service above:
   #   docker compose up --build <backend> <frontend>
-  #   backend:  api-python | api-spring
+  #   backend:  api-python | api-spring | api-dotnet
   #   frontend: web-angular | web-react | web-vue
   #   e.g.      docker compose up --build api-spring web-vue
   # Open http://localhost:8091 (WEB_PORT changes it).
@@ -85,6 +85,21 @@ services:
     depends_on:
       db-init-spring:
         condition: service_completed_successfully
+
+  # Own database too; EF Core creates it on the first migration, so no init job is needed.
+  api-dotnet:
+    profiles: [dotnet]
+    build:
+      context: .
+      dockerfile: backend-dotnet/Dockerfile
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=skills_dotnet;Username=skills;Password=skills
+    networks:
+      default:
+        aliases: [api]
+    depends_on:
+      db:
+        condition: service_healthy
 
   web-angular:
     profiles: [angular]

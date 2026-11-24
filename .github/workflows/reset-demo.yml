@@ -20,13 +20,14 @@ jobs:
       # Plain postgresql:// URLs (psql format), one per backend database
       NEON_URL_PY: ${{ secrets.NEON_URL_PY }}
       NEON_URL_SPRING: ${{ secrets.NEON_URL_SPRING }}
+      NEON_URL_DOTNET: ${{ secrets.NEON_URL_DOTNET }}
     steps:
       - name: Install psql
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Truncate employees and assignments
         run: |
-          for name in NEON_URL_PY NEON_URL_SPRING; do
+          for name in NEON_URL_PY NEON_URL_SPRING NEON_URL_DOTNET; do
             url="${!name}"
             if [ -z "$url" ]; then
               echo "$name is not set, skipping"
