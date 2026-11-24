@@ -11,7 +11,7 @@ Time budget for the user: about 2 hours in total.
 | 1     | Scaffold, `Program.cs`, `/health`, test setup           | Claude |
 | 2     | EF Core entities, `DbContext`, migrations               | Claude (user found it too trivial) |
 | 3     | Endpoints: skills, import, assignments, error handling  | Claude (port from `../backend-spring/`) |
-| 4     | Employee search with LINQ (`GET /employees`)            | User (Claude provides the tests) |
+| 4     | Employee search with LINQ (`GET /employees`)            | User (methods 1-2), Claude (3-4 on request) |
 | 5     | Dockerfile, CI job, Render deploy                       | Claude |
 
 - In user rounds: do not write the user's part. Give hints, a skeleton and the

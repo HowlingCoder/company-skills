@@ -44,13 +44,13 @@ public abstract class IntegrationTest(DatabaseFixture fixture) : IAsyncLifetime
     }
 
     protected async Task<Employee> AddEmployee(Dictionary<Skill, int>? skills = null, bool deleted = false,
-        string firstname = "Max", string? email = null)
+        string firstname = "Max", string? email = null, string lastname = "Muster")
     {
         await using var db = Fixture.CreateContext();
         var employee = new Employee
         {
             Firstname = firstname,
-            Lastname = "Muster",
+            Lastname = lastname,
             Email = email ?? $"{Guid.NewGuid()}@example.com",
             Age = 30,
             DeletedAt = deleted ? DateTimeOffset.UtcNow : null,

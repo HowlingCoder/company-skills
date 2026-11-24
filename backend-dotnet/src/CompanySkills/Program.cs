@@ -34,6 +34,7 @@ app.UseExceptionHandler();
 // Liveness check, no database access.
 app.MapGet("/health", () => new HealthResponse("ok"));
 app.MapSkillEndpoints();
+app.MapEmployeeSearchEndpoints();
 app.MapEmployeeImportEndpoints();
 app.MapEmployeeSkillsEndpoints();
 app.MapSkillAssignmentEndpoints();
